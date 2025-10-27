@@ -79,7 +79,7 @@ class UnifiedTestRunner:
         Returns:
             Tupla (is_valid, error_message)
         """
-        required_fields = ['TestID', 'Task', 'Descrizione', 'Execution', 'Device']
+        required_fields = ['TestID', 'Task', 'Descrizione', 'Active', 'Device']
         
         for field in required_fields:
             if field not in data or not data[field]:
@@ -129,7 +129,7 @@ class UnifiedTestRunner:
     async def run_all_tests(self):
         """
         Esegue tutti i test dal file Excel.
-        Filtra automaticamente i test con Execution = True/Yes/Si/1
+        Filtra automaticamente i test con Active = True/Yes/Si/1
         """
         # Read test data
         test_data_list = self.read_test_data()
@@ -140,7 +140,7 @@ class UnifiedTestRunner:
         # Count tests to execute
         executable_tests = [
             data for data in test_data_list 
-            if str(data.get('Execution', '')).lower() in ['true', 'yes', 'si', '1']
+            if str(data.get('Active', '')).lower() in ['true', 'yes', 'si', '1']
         ]
         
         print(f"\n📊 Test da eseguire: {len(executable_tests)} su {len(test_data_list)} totali\n")

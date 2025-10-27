@@ -3,3 +3,4 @@ screen/
 reports/
 agent_history.gif
 tests/__pycache__/*
+.env

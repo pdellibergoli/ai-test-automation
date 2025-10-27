@@ -53,15 +53,19 @@ class MobileTestExecutor:
         Returns:
             Tupla (app_instance, driver)
         """
-        execution = data.get('Execution', '').lower()
-        platform = data['Platform']
-        device_name = data['DeviceName']
-        udid = data.get('UDID', '')
-        app_id = data.get('AppID', '')
-        app_package = data.get('AppPackage', '')
-        app_activity = data.get('AppActivity', '')
-        test_id = data['TestID']
-        descrizione = data['Descrizione']
+        try:
+            execution = data.get('Execution', '').lower()
+            platform = data['Platform']
+            device_name = data['DeviceName']
+            udid = data.get('UDID', '')
+            app_id = data.get('AppID', '')
+            app_package = data.get('AppPackage', '')
+            app_activity = data.get('AppActivity', '')
+            test_id = data['TestID']
+            descrizione = data['Descrizione']
+        except KeyError as e:
+            raise ValueError(f"Missing required test configuration parameter: {e}")
+        
         
         # Determine execution mode (local or cloud)
         if execution == 'local':
