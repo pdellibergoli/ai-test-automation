@@ -9,6 +9,8 @@ import logging
 import datetime
 import webbrowser
 import argparse
+import io
+import os
 
 # Setup project root
 project_root = Path(__file__).parent
@@ -19,6 +21,16 @@ from utilities.report_utils import HTMLReportGenerator
 from tests.mobile_test_executor import MobileTestExecutor
 from tests.web_test_executor import WebTestExecutor
 from config_manager import get_config, validate_environment, setup_logging
+
+# Tenta di riconfigurare stdout con UTF-8 se siamo su Windows
+if sys.platform == "win32":
+    try:
+        # Reinizializza stdout con encoding utf-8
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+        print("INFO: Standard output riconfigurato per UTF-8.")
+    except Exception as e:
+        print(f"ATTENZIONE: Impossibile riconfigurare stdout per UTF-8: {e}")
 
 # Setup configuration and logging
 config = get_config()

@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 from io import BytesIO
-import shutil # <-- AGGIUNGI QUESTO IMPORT
+import shutil
 
 # --- Configurazione ---
 app = Flask(__name__)
