@@ -1,0 +1,14 @@
+{
+    "builds": [
+      {
+        "src": "web_editor.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)", // Cattura tutte le richieste
+        "dest": "web_editor.py" // Inoltrale allo script Flask
+      }
+    ]
+  }
