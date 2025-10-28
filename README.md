@@ -232,7 +232,7 @@ set PYTHONPATH=%PYTHONPATH%;%CD%          # Windows
 
 ## 📄 License
 
-MIT License - vedi file LICENSE per dettagli
+[MIT License](https://github.com/pdellibergoli/aitestautomation/blob/main/LICENSE) - vedi file LICENSE per dettagli
 
 ## 🤝 Contributing
 
