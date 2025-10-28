@@ -28,7 +28,7 @@ def validate_unified_file(excel_file: str = "dati_test.xlsx", sheet_name: str = 
         df = pd.read_excel(file_path, sheet_name=sheet_name)
         
         # Required columns
-        required_cols = ['TestID', 'Descrizione', 'Task', 'Execution', 'Device']
+        required_cols = ['TestID', 'Descrizione', 'Task', 'Active', 'Device']
         
         print("\n📋 Verifica colonne obbligatorie:")
         for col in required_cols:
@@ -63,7 +63,7 @@ def validate_unified_file(excel_file: str = "dati_test.xlsx", sheet_name: str = 
         # Summary
         print(f"\n📊 Summary:")
         print(f"   Totale righe: {len(df)}")
-        print(f"   Test da eseguire: {len(df[df['Execution'].isin(['True', 'true', 'Yes', 'yes', 'Si', 'si', True, 1])])}")
+        print(f"   Test da eseguire: {len(df[df['Active'].isin(['True', 'true', 'Yes', 'yes', 'Si', 'si', True, 1])])}")
         
         print("\n✅ Validazione completata!")
         return True
@@ -103,12 +103,13 @@ def create_sample_unified_excel(output_file: str = "dati_test_sample.xlsx"):
             'Open the app and login with credentials',
             'Navigate through app sections and verify content'
         ],
-        'Execution': [True, True, False, True, False],
+        'Active': [True, True, False, True, False],
+        'Execution': ['local', 'local', 'local', 'cloud', 'local'],
         'Device': ['web', 'web', 'web', 'mobile', 'mobile'],
         'Platform': ['', '', '', 'Android', 'iOS'],
         'DeviceName': ['', '', '', 'Pixel 6', 'iPhone 14'],
         'UDID': ['', '', '', 'emulator-5554', '00008030-xxxxx'],
-        'AppID': ['', '', '', '', ''],
+        'AppID': ['', '', '', 'lt://APP123456', ''],
         'AppPackage': ['', '', '', 'com.example.app', 'com.example.app'],
         'AppActivity': ['', '', '', '.MainActivity', ''],
     }

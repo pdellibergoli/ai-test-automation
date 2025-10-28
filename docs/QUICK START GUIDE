@@ -79,7 +79,7 @@ Crea `dati_test.xlsx` con queste colonne:
 | TestID | WEB_001 |
 | Descrizione | Test ricerca Google |
 | Task | Navigate to google.com and search for "AI" |
-| Execution | True |
+| Active | True |
 | Device | **web** o **mobile** |
 
 **IMPORTANTE**: La colonna `Device` determina se il test è mobile o web!
@@ -106,7 +106,7 @@ python main_runner.py
 Il sistema:
 1. ✅ Legge `dati_test.xlsx`
 2. ✅ Valida la configurazione
-3. ✅ Esegue i test con `Execution=True`
+3. ✅ Esegue i test con `Active=True`
 4. ✅ Genera report HTML
 5. ✅ Apre automaticamente il report nel browser
 
@@ -277,8 +277,8 @@ OPENAI_MODEL=gpt-4.1-mini
 ### Tip 4: Test Selettivi
 
 Vuoi eseguire solo alcuni test? Nel file Excel, cambia:
-- `Execution = True` → test viene eseguito ✅
-- `Execution = False` → test viene saltato ⏭️
+- `Active = True` → test viene eseguito ✅
+- `Active = False` → test viene saltato ⏭️
 
 ### Tip 5: Organizza i Test
 

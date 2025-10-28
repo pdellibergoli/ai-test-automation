@@ -139,7 +139,7 @@ python excel_helper.py
 - `TestID`: Identificatore univoco
 - `Descrizione`: Descrizione test
 - `Task`: Prompt per AI agent
-- `Execution`: True/False per eseguire
+- `Active`: True/False per eseguire
 - **`Device`**: "mobile" o "web" ← **IMPORTANTE**
 
 **Colonne per mobile** (solo se Device=mobile):

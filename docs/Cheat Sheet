@@ -48,7 +48,7 @@ python main_runner.py
 DEBUG_MODE=true python main_runner.py
 
 # Esegui solo test specifici
-# (Modifica Execution=True/False nel file Excel)
+# (Modifica Active=True/False nel file Excel)
 ```
 
 ## 📱 Mobile Testing
@@ -124,16 +124,16 @@ pip list | grep appium
 
 ### Struttura Excel minima
 
-| TestID | Descrizione | Task | Execution | Device |
+| TestID | Descrizione | Task | Active | Device |
 |--------|-------------|------|-----------|--------|
 | WEB_001 | Test Google | Search "AI" on google.com | True | web |
 | MOB_001 | Test App | Open app and login | True | mobile |
 
 ### Test Web - Colonne richieste
-- TestID, Descrizione, Task, Execution, Device="web"
+- TestID, Descrizione, Task, Active, Device="web"
 
 ### Test Mobile - Colonne richieste  
-- TestID, Descrizione, Task, Execution, Device="mobile"
+- TestID, Descrizione, Task, Active, Device="mobile"
 - Platform, DeviceName, UDID (local) o AppID (cloud)
 - AppPackage, AppActivity (Android)
 
@@ -342,15 +342,15 @@ pip install --force-reinstall browser-use
 
 ```bash
 # Esegui solo test web
-# Nel Excel: Device="web", Execution=True per test web
-#            Execution=False per test mobile
+# Nel Excel: Device="web", Active=True per test web
+#            Active=False per test mobile
 
 # Esegui solo test mobile
-# Nel Excel: Device="mobile", Execution=True per test mobile
-#            Execution=False per test web
+# Nel Excel: Device="mobile", Active=True per test mobile
+#            Active=False per test web
 
 # Test singolo
-# Nel Excel: Execution=True solo per quel test
+# Nel Excel: Active=True solo per quel test
 ```
 
 ## 💡 Quick Tips

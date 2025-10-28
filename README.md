@@ -83,36 +83,37 @@ Il file `dati_test.xlsx` deve contenere le seguenti colonne:
 - `TestID`: Identificatore univoco (es: WEB_001, MOB_001)
 - `Descrizione`: Descrizione human-readable del test
 - `Task`: Task in linguaggio naturale per l'AI agent
-- `Execution`: `True`/`False` per eseguire o saltare il test
+- `Active`: `True`/`False` per eseguire o saltare il test
 - **`Device`**: `mobile` o `web` ← **NUOVO CAMPO CHIAVE**
 
 #### Colonne per Test Mobile (required solo se Device="mobile")
+- `Execution`: `local` o `cloud` gestisce l'esecuzione in cloud LambdaTest (AppID richiesto) o in loale
 - `Platform`: `Android` o `iOS`
 - `DeviceName`: Nome del dispositivo (es: Pixel 6, iPhone 14)
 - `UDID`: Device ID per esecuzione locale
 - `AppPackage`: Package name Android (es: com.example.app)
 - `AppActivity`: Activity Android (es: .MainActivity)
-- `AppID`: App ID per LambdaTest (es: lt://APP123456)
+- `AppID`: App ID per LambdaTest (es: lt://APP123456, da usare solo con Execution = 'cloud')
 
 #### Esempio Excel
 
-| TestID | Descrizione | Task | Execution | Device | Platform | DeviceName | AppPackage |
-|--------|-------------|------|-----------|--------|----------|------------|------------|
-| WEB_001 | Google Search | Search for "AI agents" on google.com | True | web | - | - | - |
-| MOB_001 | Android Login | Open app and login | True | mobile | Android | Pixel 6 | com.app |
+| TestID | Descrizione | Task | Active | Execution | Device | Platform | DeviceName | AppPackage | AppID |
+|--------|-------------|------|--------|-----------|--------|----------|------------|------------|-------|
+| WEB_001 | Google Search | Search for "AI agents" on google.com | True | local | web | - | - | - | - |
+| MOB_001 | Android Login | Open app and login | True | cloud | mobile | Android | Pixel 6 | com.app | lt://APP123456 |
 
 ## 🎯 Utilizzo
 
 ### Esecuzione Standard
 
 ```bash
-# Esegui tutti i test con Execution=True
+# Esegui tutti i test con Active=True
 python main_runner.py
 ```
 
 Il sistema:
 1. Legge `dati_test.xlsx`
-2. Filtra test con `Execution=True`
+2. Filtra test con `Active=True`
 3. Instradrà automaticamente verso:
    - `MobileTestExecutor` se `Device=mobile`
    - `WebTestExecutor` se `Device=web`
