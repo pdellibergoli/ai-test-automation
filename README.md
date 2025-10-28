@@ -225,7 +225,7 @@ set PYTHONPATH=%PYTHONPATH%;%CD%          # Windows
 ## 📞 Support
 
 - 📧 Email: pasquale.dellibergoli91@gmail.com
-- 📖 Docs: [Full Documentation](./docs/Project Summary)
+- 📖 Docs: [Full Documentation](./docs/Project_Summary)
 
 ## 📄 License
 
