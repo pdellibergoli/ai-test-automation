@@ -5,7 +5,6 @@ pandas>=2.0.0
 openpyxl>=3.1.0
 Pillow>=10.0.0
 Flask>=3.0.0
-vercel-blob>=0.4.2
 
 # Mobile Testing
 Appium-Python-Client>=3.1.0

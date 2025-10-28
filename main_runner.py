@@ -20,14 +20,6 @@ from tests.mobile_test_executor import MobileTestExecutor
 from tests.web_test_executor import WebTestExecutor
 from config_manager import get_config, validate_environment, setup_logging
 
-from dotenv import load_dotenv
-import os
-try:
-    from vercel_blob import download
-except ImportError:
-    print("ERRORE: Libreria 'vercel-blob' non trovata. Esegui: pip install vercel-blob")
-    sys.exit(1)
-
 # Setup configuration and logging
 config = get_config()
 setup_logging()
@@ -177,7 +169,7 @@ class UnifiedTestRunner:
 def main():
     """
     Entry point principale dell'applicazione.
-    Scarica il file Excel da Vercel Blob, poi esegue i test.
+    Legge il file Excel specificato dall'argomento --file dal disco locale.
     """
     print("""
     ╔═══════════════════════════════════════════════════════════╗
@@ -187,62 +179,49 @@ def main():
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
     """)
-    
-    # --- MODIFICA INIZIA QUI ---
-    
-    # Carica .env per trovare il token
-    load_dotenv()
-    BLOB_TOKEN = os.getenv('BLOB_READ_WRITE_TOKEN')
-    if not BLOB_TOKEN:
-        print("❌ ERRORE: BLOB_READ_WRITE_TOKEN non trovato nel file .env.")
-        print("   Assicurati che il token sia configurato per scaricare i test.")
-        sys.exit(1)
-    
+
+    # --- RIPRISTINO INIZIA QUI ---
+
     # Configura il parser per gli argomenti
     parser = argparse.ArgumentParser(description="AI Test Automation Runner")
     parser.add_argument(
         '--file',
         type=str,
         default='dati_test.xlsx',
-        help='Nome del file Excel da scaricare da Vercel Blob (es. dati_test.xlsx)'
+        help='Nome del file Excel locale da cui caricare i test (es. dati_test.xlsx)'
     )
     args = parser.parse_args()
 
-    excel_filename = args.file
-    local_excel_path = project_root / excel_filename
-    
-    print(f"☁️  Download del file di test '{excel_filename}' da Vercel Blob...")
-    
-    try:
-        # Tenta di scaricare il file
-        download(
-            pathname=excel_filename,
-            destination_path=local_excel_path,
-            token=BLOB_TOKEN
-        )
-        print(f"✅ File scaricato con successo in: {local_excel_path}")
-        
-    except Exception as e:
-        if '404' in str(e):
-            print(f"❌ ERRORE: File '{excel_filename}' non trovato su Vercel Blob.")
-            print("   Assicurati che il file esista o crealo tramite l'editor web.")
-        else:
-            print(f"❌ ERRORE durante il download da Vercel Blob: {e}")
+    # Costruisce il percorso del file locale
+    excel_file = project_root / args.file
+
+    print(f"📖 File di test locale selezionato: {excel_file.name}")
+
+    # Rimuoviamo la parte di download da Vercel Blob
+    # print(f"☁️  Download del file di test '{excel_filename}' da Vercel Blob...")
+    # try:
+    #     download(...)
+    # except Exception as e: ...
+
+    # Controlla se il file locale esiste
+    if not excel_file.exists():
+        print(f"❌ File Excel locale non trovato: {excel_file}")
+        print(f"💡 Assicurati che il file esista nella directory del progetto.")
         sys.exit(1)
 
-    # --- MODIFICA FINISCE QUI ---
-    
-    # Da qui in poi, lo script usa il file appena scaricato
-    runner = UnifiedTestRunner(excel_file=local_excel_path)
-    
+    # --- RIPRISTINO FINISCE QUI ---
+
+    # Il runner userà il percorso del file locale
+    runner = UnifiedTestRunner(excel_file=excel_file)
+
     try:
         asyncio.run(runner.run_all_tests())
         print("\n✅ Esecuzione completata con successo!")
-        
+
     except KeyboardInterrupt:
         print("\n⚠️  Esecuzione interrotta dall'utente")
         sys.exit(0)
-        
+
     except Exception as e:
         print(f"\n❌ Errore durante l'esecuzione: {e}")
         import traceback
