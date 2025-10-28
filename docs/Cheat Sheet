@@ -1,0 +1,407 @@
+# 🚀 Cheat Sheet - AI Test Automation Framework
+
+Riferimento rapido per comandi e operazioni comuni.
+
+## 📦 Setup & Installation
+
+```bash
+# Crea ambiente virtuale
+python -m venv .venv
+
+# Attiva ambiente
+source .venv/bin/activate          # Mac/Linux
+.venv\Scripts\activate             # Windows
+
+# Installa dipendenze
+pip install -r requirements.txt
+
+# Installa Playwright
+playwright install chromium --with-deps
+
+# Installa Appium (per mobile)
+npm install -g appium
+appium driver install uiautomator2
+```
+
+## ⚙️ Configurazione
+
+```bash
+# Crea file .env da template
+cp .env.example .env               # Mac/Linux
+copy .env.example .env             # Windows
+
+# Test configurazione
+python config_manager.py
+
+# Crea file Excel di esempio
+python excel_helper.py
+# Scegli opzione 3
+```
+
+## 🎯 Esecuzione Test
+
+```bash
+# Esegui tutti i test
+python main_runner.py
+
+# Esegui con debug mode
+DEBUG_MODE=true python main_runner.py
+
+# Esegui solo test specifici
+# (Modifica Execution=True/False nel file Excel)
+```
+
+## 📱 Mobile Testing
+
+```bash
+# Avvia Appium server (terminale separato)
+appium
+
+# Lista dispositivi Android connessi
+adb devices
+
+# Avvia emulator Android
+emulator -avd Pixel_6_API_33
+
+# Lista simulatori iOS (solo Mac)
+xcrun simctl list devices
+
+# Avvia simulatore iOS
+open -a Simulator
+```
+
+## 🌐 Web Testing
+
+```bash
+# Verifica Chromium installato
+playwright install --dry-run chromium
+
+# Reinstalla Chromium
+playwright install chromium --with-deps
+
+# Test con browser visibile
+# Nel .env: BROWSER_HEADLESS=false
+
+# Test in headless mode (più veloce)
+# Nel .env: BROWSER_HEADLESS=true
+```
+
+## 📊 Excel Management
+
+```bash
+# Unisci file Excel separati (web + mobile)
+python excel_helper.py
+# Opzione 1: Migra file Excel
+
+# Valida file Excel
+python excel_helper.py
+# Opzione 2: Valida file unificato
+
+# Crea file di esempio
+python excel_helper.py
+# Opzione 3: Crea file di esempio
+```
+
+## 🔍 Debugging
+
+```bash
+# Logging dettagliato
+export BROWSER_USE_LOGGING_LEVEL=DEBUG    # Mac/Linux
+set BROWSER_USE_LOGGING_LEVEL=DEBUG      # Windows
+
+# Debug mode completo
+# Nel .env: DEBUG_MODE=true
+
+# Test configurazione
+python config_manager.py
+
+# Verifica dipendenze
+pip list | grep browser-use
+pip list | grep appium
+```
+
+## 📝 Modifica Test
+
+### Struttura Excel minima
+
+| TestID | Descrizione | Task | Execution | Device |
+|--------|-------------|------|-----------|--------|
+| WEB_001 | Test Google | Search "AI" on google.com | True | web |
+| MOB_001 | Test App | Open app and login | True | mobile |
+
+### Test Web - Colonne richieste
+- TestID, Descrizione, Task, Execution, Device="web"
+
+### Test Mobile - Colonne richieste  
+- TestID, Descrizione, Task, Execution, Device="mobile"
+- Platform, DeviceName, UDID (local) o AppID (cloud)
+- AppPackage, AppActivity (Android)
+
+## 🤖 LLM Configuration
+
+### Usa Gemini (Default, Free)
+```bash
+# In .env:
+WEB_LLM_PROVIDER=gemini
+GOOGLE_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+### Usa OpenAI
+```bash
+# In .env:
+WEB_LLM_PROVIDER=openai
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+### Usa Ollama (Local, Free)
+```bash
+# 1. Installa Ollama: https://ollama.ai/
+# 2. Pull model: ollama pull llava:13b
+# 3. In .env:
+USE_LOCAL_LLM=true
+LOCAL_LLM=llava:13b
+```
+
+## 🔧 Troubleshooting
+
+### Problema: "Module not found"
+```bash
+pip install -r requirements.txt --force-reinstall
+```
+
+### Problema: "API key missing"
+```bash
+# Verifica .env esiste
+ls -la .env              # Mac/Linux
+dir .env                 # Windows
+
+# Aggiungi chiave
+echo "GOOGLE_API_KEY=your_key" >> .env
+```
+
+### Problema: "Appium not connecting"
+```bash
+# Verifica Appium in esecuzione
+ps aux | grep appium     # Mac/Linux
+tasklist | findstr appium # Windows
+
+# Restart Appium
+pkill -9 appium          # Mac/Linux
+appium                   # Riavvia
+```
+
+### Problema: "Device not found"
+```bash
+# Android
+adb kill-server
+adb start-server
+adb devices
+
+# iOS (Mac only)
+xcrun simctl list devices
+```
+
+### Problema: "Browser not opening"
+```bash
+playwright install chromium --with-deps --force
+```
+
+## 📊 Report Management
+
+```bash
+# Report location
+# reports/unified/YYYYMMDD_HHMMSS/test_report_*.html
+
+# Apri ultimo report
+# (Si apre automaticamente dopo esecuzione)
+
+# Pulisci vecchi report
+rm -rf reports/unified/*     # Mac/Linux
+rmdir /s reports\unified\*   # Windows
+
+# Screenshot location
+# screen/mobile/ - Test mobile
+# screen/web/ - Test web
+```
+
+## 🎨 Customization
+
+### Custom System Prompt (Web)
+```bash
+# Crea system_prompt.txt nella root
+echo "Your custom instructions here" > system_prompt.txt
+```
+
+### Custom Report Directory
+```bash
+# In .env:
+REPORT_DIR=/path/to/custom/reports
+```
+
+### Temperatura LLM (Creatività)
+```bash
+# In .env:
+LLM_TEMPERATURE=0.0    # Molto deterministico
+LLM_TEMPERATURE=0.3    # Bilanciato (raccomandato)
+LLM_TEMPERATURE=1.0    # Molto creativo
+```
+
+## 🔄 Git Workflow
+
+```bash
+# Prima volta
+git clone https://github.com/your-org/aitestautomation.git
+cd aitestautomation
+
+# Crea .env (NON committare!)
+cp .env.example .env
+
+# Branch feature
+git checkout -b feature/my-feature
+
+# Commit changes
+git add .
+git commit -m "Add feature: description"
+
+# Push
+git push origin feature/my-feature
+
+# Pull latest
+git pull origin main
+```
+
+## 📈 Performance Tips
+
+### Velocizza Test
+```bash
+# In .env:
+BROWSER_HEADLESS=true
+MIN_WAIT_PAGE_LOAD=0.05
+WAIT_BETWEEN_ACTIONS=0.05
+```
+
+### Riduci Screenshot Size
+```bash
+# In .env:
+SCREENSHOT_MAX_WIDTH=800
+SCREENSHOT_MAX_HEIGHT=600
+```
+
+### Usa LLM più veloce
+```bash
+# Gemini Flash (più veloce)
+GEMINI_MODEL=gemini-2.5-flash
+
+# GPT-4.1 mini (bilanciato)
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+## 🔐 Security Best Practices
+
+```bash
+# NON committare .env
+echo ".env" >> .gitignore
+
+# Usa keys diverse per env diversi
+.env.dev
+.env.staging  
+.env.production
+
+# Rotazione chiavi regolare
+# Cambia API keys ogni 3-6 mesi
+
+# Verifica .gitignore
+git status --ignored
+```
+
+## 📚 Comandi Utili Python
+
+```bash
+# Verifica versione Python
+python --version
+
+# Lista pacchetti installati
+pip list
+
+# Aggiorna pip
+python -m pip install --upgrade pip
+
+# Freeze requirements
+pip freeze > requirements.txt
+
+# Pulisci cache
+pip cache purge
+
+# Reinstalla singolo package
+pip install --force-reinstall browser-use
+```
+
+## 🧪 Testing Commands
+
+```bash
+# Esegui solo test web
+# Nel Excel: Device="web", Execution=True per test web
+#            Execution=False per test mobile
+
+# Esegui solo test mobile
+# Nel Excel: Device="mobile", Execution=True per test mobile
+#            Execution=False per test web
+
+# Test singolo
+# Nel Excel: Execution=True solo per quel test
+```
+
+## 💡 Quick Tips
+
+```bash
+# Comando più usato
+python main_runner.py
+
+# Prima di committare
+git status
+git diff
+
+# Backup Excel prima di modifiche
+cp dati_test.xlsx dati_test.backup.xlsx
+
+# View report
+# Auto-apre nel browser dopo esecuzione
+
+# Stop esecuzione
+Ctrl+C (Mac/Linux/Windows)
+```
+
+## 🆘 Help Commands
+
+```bash
+# Help configurazione
+python config_manager.py
+
+# Help excel
+python excel_helper.py
+
+# Verifica setup
+python -c "import browser_use; print('OK')"
+
+# Verifica Appium
+appium --version
+
+# Verifica Playwright
+playwright --version
+```
+
+## 📞 Get Help
+
+- **Config issues**: `python config_manager.py`
+- **Excel issues**: `python excel_helper.py`
+- **Documentation**: Vedi `README.md`
+- **Quick Start**: Vedi `QUICK_START.md`
+- **GitHub**: Open issue con log completo
+
+---
+
+**Tip**: Aggiungi questo file ai tuoi bookmarks per accesso rapido! 🔖
+
+Made with ❤️ by Pasquale Delli Bergoli

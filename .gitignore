@@ -1,6 +1,114 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
 .venv/
-screen/
-reports/
-agent_history.gif
-tests/__pycache__/*
+venv/
+ENV/
+env/
+.virtualenv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment Variables
 .env
+.env.local
+.env.*.local
+
+# Screenshots and Media
+screen/mobile/*.jpg
+screen/mobile/*.png
+screen/web/*.jpg
+screen/web/*.png
+*.gif
+agent_history.gif
+
+# Reports
+reports/
+!reports/.gitkeep
+*.html
+
+# Test Output
+*.log
+test_output/
+temp/
+tmp/
+
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+
+# Appium
+appium.log
+
+# Playwright
+.playwright/
+playwright-report/
+test-results/
+
+# Browser data
+chrome_cdp_*/
+temp-profile-*/
+
+# LambdaTest
+lambdatest.log
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Pytest
+.pytest_cache/
+.tox/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*.old
+*_backup.*

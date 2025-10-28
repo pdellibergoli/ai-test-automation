@@ -1,0 +1,40 @@
+# Core Dependencies
+browser-use>=0.7.7
+python-dotenv>=1.0.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+Pillow>=10.0.0
+
+# Mobile Testing
+Appium-Python-Client>=3.1.0
+selenium>=4.15.0
+
+# LLM Providers
+# Google Gemini
+langchain-google-genai>=1.0.0
+google-generativeai>=0.3.0
+
+# OpenAI (optional)
+openai>=1.0.0
+
+# Anthropic (optional)
+anthropic>=0.18.0
+
+# Local LLM - Ollama (optional)
+# No additional package needed, browser-use includes ChatOllama
+
+# Web Automation
+playwright>=1.40.0
+
+# Utilities
+aiohttp>=3.9.0
+asyncio>=3.4.3
+
+# Reporting
+Jinja2>=3.1.0
+
+# Development (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0

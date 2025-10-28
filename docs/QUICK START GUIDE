@@ -1,0 +1,307 @@
+# 🚀 Quick Start Guide - AI Test Automation
+
+Inizia a usare il framework in **5 minuti**.
+
+## 📦 Step 1: Installazione Base
+
+```bash
+# Clone o naviga nella directory del progetto
+cd aitestautomation
+
+# Crea ambiente virtuale
+python -m venv .venv
+
+# Attiva ambiente
+source .venv/bin/activate  # Mac/Linux
+# oppure
+.venv\Scripts\activate     # Windows
+
+# Installa dipendenze
+pip install -r requirements.txt
+```
+
+## 🔑 Step 2: Configurazione API Key
+
+Crea file `.env` nella root del progetto:
+
+```bash
+# Copia template
+cp .env.example .env  # Mac/Linux
+copy .env.example .env  # Windows
+
+# Modifica .env con il tuo editor preferito
+nano .env  # oppure usa VSCode, Notepad++, etc.
+```
+
+**Minimo richiesto per iniziare:**
+
+```bash
+# Nel file .env, aggiungi ALMENO questa chiave:
+GOOGLE_API_KEY=your_google_gemini_api_key_here
+```
+
+> 💡 **Ottieni una API key gratuita**: [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+## 📊 Step 3: Prepara File Excel
+
+### Opzione A: Crea nuovo file di esempio
+
+```bash
+python excel_helper.py
+
+# Scegli: 3. Crea file di esempio
+# Questo genera "dati_test_sample.xlsx"
+
+# Rinomina il file
+mv dati_test_sample.xlsx dati_test.xlsx  # Mac/Linux
+ren dati_test_sample.xlsx dati_test.xlsx  # Windows
+```
+
+### Opzione B: Usa file esistenti (se ce li hai già)
+
+```bash
+python excel_helper.py
+
+# Scegli: 1. Migra file Excel
+# Input: dati_test.xlsx (web) + dati_test_app.xlsx (mobile)
+# Output: dati_test_unified.xlsx
+
+# Rinomina se necessario
+mv dati_test_unified.xlsx dati_test.xlsx
+```
+
+### Opzione C: Crea manualmente
+
+Crea `dati_test.xlsx` con queste colonne:
+
+| Colonna | Valore Esempio |
+|---------|----------------|
+| TestID | WEB_001 |
+| Descrizione | Test ricerca Google |
+| Task | Navigate to google.com and search for "AI" |
+| Execution | True |
+| Device | **web** o **mobile** |
+
+**IMPORTANTE**: La colonna `Device` determina se il test è mobile o web!
+
+## ✅ Step 4: Verifica Setup
+
+```bash
+# Test configurazione
+python config_manager.py
+```
+
+Dovresti vedere:
+```
+✅ Configuration ambiente validata con successo
+✅ Web config: ✅
+```
+
+## 🎯 Step 5: Esegui il Primo Test
+
+```bash
+python main_runner.py
+```
+
+Il sistema:
+1. ✅ Legge `dati_test.xlsx`
+2. ✅ Valida la configurazione
+3. ✅ Esegue i test con `Execution=True`
+4. ✅ Genera report HTML
+5. ✅ Apre automaticamente il report nel browser
+
+## 🎉 Complimenti!
+
+Se sei arrivato qui, il setup è completo! 
+
+## 📱 Prossimi Passi per Test Mobile
+
+Se vuoi eseguire anche test mobile:
+
+### 1. Installa Appium
+
+```bash
+# Installa Node.js (prerequisito)
+# Scarica da: https://nodejs.org/
+
+# Installa Appium globalmente
+npm install -g appium
+
+# Installa driver
+appium driver install uiautomator2  # Android
+appium driver install xcuitest      # iOS (solo su Mac)
+```
+
+### 2. Avvia Appium Server
+
+```bash
+# In un terminale separato
+appium
+```
+
+Dovresti vedere: `Appium REST http interface listener started on...`
+
+### 3. Configura Device
+
+**Per Android Emulator:**
+
+```bash
+# Avvia emulator da Android Studio
+# oppure da command line:
+emulator -avd Pixel_6_API_33
+
+# Verifica connessione
+adb devices
+# Output atteso: List of devices attached
+#                emulator-5554    device
+```
+
+**Per device fisico Android:**
+
+```bash
+# 1. Abilita USB Debugging sul device
+# 2. Connetti via USB
+# 3. Verifica connessione
+adb devices
+```
+
+### 4. Aggiungi Test Mobile al Excel
+
+Aggiungi riga nel file `dati_test.xlsx`:
+
+| TestID | Descrizione | Task | Execution | Device | Platform | DeviceName | UDID | AppPackage | AppActivity |
+|--------|-------------|------|-----------|--------|----------|------------|------|------------|-------------|
+| MOB_001 | Test app Android | Open app and verify home screen | True | **mobile** | Android | Pixel 6 | emulator-5554 | com.example.app | .MainActivity |
+
+### 5. Esegui Test
+
+```bash
+python main_runner.py
+```
+
+## 🐛 Troubleshooting Rapido
+
+### Problema: "GOOGLE_API_KEY missing"
+
+```bash
+# Verifica il file .env esista
+ls -la .env  # Mac/Linux
+dir .env     # Windows
+
+# Aggiungi la chiave
+echo "GOOGLE_API_KEY=your_key_here" >> .env
+```
+
+### Problema: "File Excel non trovato"
+
+```bash
+# Crea file di esempio
+python excel_helper.py
+# Scegli opzione 3
+
+# Rinomina
+mv dati_test_sample.xlsx dati_test.xlsx
+```
+
+### Problema: "No module named 'browser_use'"
+
+```bash
+# Reinstalla dipendenze
+pip install -r requirements.txt
+```
+
+### Problema: Test mobile non parte
+
+```bash
+# Verifica Appium sia in esecuzione
+# Terminal 1:
+appium
+
+# Terminal 2:
+python main_runner.py
+```
+
+### Problema: Browser non si apre
+
+```bash
+# Installa Chromium
+playwright install chromium --with-deps
+```
+
+## 📚 Risorse Utili
+
+- **README completo**: Vedi `README.md` per documentazione dettagliata
+- **Esempi Excel**: Usa `excel_helper.py` (opzione 3) per esempi
+- **Configurazione avanzata**: Vedi documentazione in `excel_structure.md`
+- **Support**: Apri un issue su GitHub
+
+## 🎓 Tutorial Video (Coming Soon)
+
+- [ ] Setup base in 5 minuti
+- [ ] Primo test web
+- [ ] Primo test mobile
+- [ ] Configurazione avanzata
+
+## ✨ Tips & Tricks
+
+### Tip 1: Debug Mode
+
+```bash
+# Nel file .env, aggiungi:
+DEBUG_MODE=true
+
+# Poi esegui
+python main_runner.py
+```
+
+Vedrai output molto più dettagliato.
+
+### Tip 2: Headless Browser (più veloce)
+
+```bash
+# Nel file .env:
+BROWSER_HEADLESS=true
+```
+
+Il browser non si aprirà visualmente, ma i test saranno più rapidi.
+
+### Tip 3: Cambia LLM Provider
+
+```bash
+# Nel file .env, per usare OpenAI:
+WEB_LLM_PROVIDER=openai
+OPENAI_API_KEY=your_openai_key
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+### Tip 4: Test Selettivi
+
+Vuoi eseguire solo alcuni test? Nel file Excel, cambia:
+- `Execution = True` → test viene eseguito ✅
+- `Execution = False` → test viene saltato ⏭️
+
+### Tip 5: Organizza i Test
+
+Usa prefissi nei TestID per organizzare:
+- `WEB_SMOKE_001`, `WEB_SMOKE_002` → Test smoke web
+- `WEB_REG_001`, `WEB_REG_002` → Test regression web
+- `MOB_SMOKE_001` → Test smoke mobile
+- `MOB_REG_001` → Test regression mobile
+
+## 🆘 Still Having Issues?
+
+1. ✅ Verifica di aver completato **tutti** gli step 1-4
+2. ✅ Esegui `python config_manager.py` per diagnostica
+3. ✅ Verifica il file `.env` sia nella directory corretta
+4. ✅ Controlla che l'ambiente virtuale sia attivato
+5. ✅ Leggi il README completo per troubleshooting avanzato
+6. ✅ Apri un issue su GitHub con:
+   - Output di `python config_manager.py`
+   - Log di errore completo
+   - Sistema operativo e versione Python
+
+---
+
+**Happy Testing! 🎉**
+
+Made with ❤️  by Pasquale Delli Bergoli
