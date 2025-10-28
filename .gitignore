@@ -114,3 +114,4 @@ Desktop.ini
 *.backup
 *.old
 *_backup.*
+.vercel
