@@ -52,7 +52,6 @@ agent_history.gif
 # Reports
 reports/
 !reports/.gitkeep
-*.html
 
 # Test Output
 *.log
