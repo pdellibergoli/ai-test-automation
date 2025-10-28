@@ -113,3 +113,4 @@ Desktop.ini
 *.backup
 *.old
 *_backup.*
+*.pyc

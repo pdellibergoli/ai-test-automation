@@ -24,7 +24,7 @@ def set_mobile_cloud_caps(platformName, deviceName, app_id, test_id, descrizione
         'app': app_id,
         'noReset': True,
         'isRealMobile': True,
-        'build': test_id,
+        'build': f'{test_id} - {descrizione}',
         'name': descrizione,
         'project': 'iCorner TA',
     }

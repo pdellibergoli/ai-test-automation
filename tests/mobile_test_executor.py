@@ -8,6 +8,7 @@ from pathlib import Path
 import asyncio
 import logging
 import traceback
+from dotenv import load_dotenv
 
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
@@ -20,6 +21,8 @@ from dotenv import load_dotenv
 from browser_use import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+# Carica il .env nella shell
+load_dotenv() 
 
 class MobileTestExecutor:
     """
