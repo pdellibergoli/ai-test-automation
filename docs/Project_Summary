@@ -48,7 +48,7 @@ aitestautomation/
 ├── 🚀 CORE FILES (NUOVI)
 │   ├── main_runner.py              # Entry point principale - USA QUESTO
 │   ├── config_manager.py           # Gestione configurazione centralizzata
-│   ├── excel_helper.py         # Tool per gestione file Excel
+│   ├── excel_helper.py             # Tool per gestione file Excel
 │   ├── dati_test.xlsx              # File Excel unificato (mobile + web)
 │   ├── .env                        # Configurazione (DA CREARE, vedi .env.example)
 │   └── .env.example                # Template configurazione
@@ -91,11 +91,7 @@ aitestautomation/
 │   ├── requirements.txt            # Dipendenze Python
 │   └── .vscode/                    # Configurazione VSCode
 │
-└── ⚠️ DEPRECATED (Compatibilità retroattiva)
-    ├── tests/
-    │   ├── mobile_AI_test.py       # Vecchio script mobile (non usare)
-    │   └── web_AI_test.py          # Vecchio script web (non usare)
-    └── dati_test_app.xlsx          # Vecchio Excel mobile (migrare)
+│
 ```
 
 ## 🔑 File Chiave
