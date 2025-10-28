@@ -62,6 +62,7 @@ tmp/
 # Excel temporary files
 ~$*.xlsx
 ~$*.xls
+*sample.xlsx
 
 # Appium
 appium.log
