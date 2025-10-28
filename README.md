@@ -134,16 +134,14 @@ python main_runner.py
 
 ```
 aitestautomation/
-├── main_runner.py              # 🆕 Entry point principale (USA QUESTO)
+├── main_runner.py              # Entry point principale
 ├── dati_test.xlsx              # File Excel unificato
 ├── .env                        # Configurazione (GIT IGNORED)
 ├── system_prompt.txt           # System prompt custom per web tests
 │
 ├── tests/
-│   ├── mobile_test_executor.py # 🆕 Executor test mobile
-│   ├── web_test_executor.py    # 🆕 Executor test web
-│   ├── mobile_AI_test.py       # ⚠️ DEPRECATED (ma ancora funzionante)
-│   └── web_AI_test.py          # ⚠️ DEPRECATED (ma ancora funzionante)
+│   ├── mobile_test_executor.py # Executor test mobile
+│   ├── web_test_executor.py    # Executor test web
 │
 ├── utilities/
 │   ├── excel_utils.py          # Lettura Excel
@@ -156,7 +154,7 @@ aitestautomation/
 │   └── web/                    # Screenshot test web
 │
 ├── reports/
-│   └── unified/                # 🆕 Report unificati
+│   └── unified/                # Report unificati
 │       └── YYYYMMDD_HHMMSS/
 │           └── test_report_*.html
 │
@@ -226,13 +224,12 @@ set PYTHONPATH=%PYTHONPATH%;%CD%          # Windows
 
 ## 📞 Support
 
-- 📧 Email: support@example.com
-- 💬 Discord: [Join Server]
-- 📖 Docs: [Full Documentation](./docs/)
+- 📧 Email: pasquale.dellibergoli91@gmail.com
+- 📖 Docs: [Full Documentation](./docs/Project Summary)
 
 ## 📄 License
 
-[MIT License](https://github.com/pdellibergoli/aitestautomation/blob/main/LICENSE) - vedi file LICENSE per dettagli
+[MIT License](LICENSE) - vedi file LICENSE per dettagli
 
 ## 🤝 Contributing
 
