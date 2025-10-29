@@ -226,8 +226,58 @@
             if (tr) { tr.classList.toggle('expanded'); }
         }
 
-        // --- Salvataggio Dati ---
-        async function saveData() { setSaveButtonLoading(true); const data = []; const rows = tableBody.querySelectorAll('tr'); try { let hasEmptyTestID = false; rows.forEach(tr => { if (tr.querySelector('td[colspan]')) return; const rowData = {}; tr.querySelectorAll('td[data-key]').forEach(td => { const key = td.dataset.key; if (key === 'Active') { rowData[key] = td.querySelector('input[type="checkbox"]').checked; } else { rowData[key] = td.textContent; } }); if (!rowData.TestID || rowData.TestID.trim() === '') { hasEmptyTestID = true; const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = 'red'; } else { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; } data.push(rowData); }); if (hasEmptyTestID) { throw new Error("Tutti i 'TestID' sono obbligatori."); } rows.forEach(tr => { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; }); const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (!response.ok) { const errorResult = await response.json(); throw new Error(errorResult.error || response.statusText); } showToast("Salvataggio", "Dati salvati con successo!", "success"); setDirty(false); await loadData(); } catch (error) { showToast("Errore Salvataggio", `Impossibile salvare: ${error.message}`, "danger"); } finally { setSaveButtonLoading(false); } }
+        // --- Salvataggio Dati (RESTITUISCE BOOLEANO) ---
+        async function saveData() {
+            setSaveButtonLoading(true);
+            const data = [];
+            const rows = tableBody.querySelectorAll('tr');
+            let saveSuccessful = false; // Flag per il risultato
+
+            try {
+                let hasEmptyTestID = false;
+                rows.forEach(tr => {
+                    if (tr.querySelector('td[colspan]')) return;
+                    const rowData = {};
+                    tr.querySelectorAll('td[data-key]').forEach(td => {
+                        const key = td.dataset.key;
+                        if (key === 'Active') { rowData[key] = td.querySelector('input[type="checkbox"]').checked; }
+                        else { rowData[key] = td.textContent; } // Non usare trim() qui
+                    });
+                    if (!rowData.TestID || rowData.TestID.trim() === '') {
+                        hasEmptyTestID = true;
+                        const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = 'red';
+                    } else {
+                        const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = '';
+                    }
+                    data.push(rowData);
+                });
+
+                if (hasEmptyTestID) { throw new Error("Tutti i 'TestID' sono obbligatori."); }
+                rows.forEach(tr => { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; });
+
+                const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.error || response.statusText);
+                }
+
+                showToast("Salvataggio", "Dati salvati con successo!", "success");
+                setDirty(false); // Resetta il flag
+                saveSuccessful = true; // Imposta il flag di successo
+
+            } catch (error) {
+                showToast("Errore Salvataggio", `Impossibile salvare: ${error.message}`, "danger");
+                saveSuccessful = false; // Imposta il flag di fallimento
+            } finally {
+                setSaveButtonLoading(false);
+            }
+            return saveSuccessful; // Restituisce il risultato del salvataggio
+        }
         function setSaveButtonLoading(isLoading) { const saveButton = document.getElementById('save-button'); if (isLoading) { saveButton.disabled = true; saveSpinner.style.display = 'inline-block'; } else { saveButton.disabled = false; saveSpinner.style.display = 'none'; } }
 
         // --- Gestione Modifiche (Dirty Flag) ---
@@ -237,8 +287,38 @@
         function addNewRow() { const placeholder = tableBody.querySelector('td[colspan]'); if (placeholder) { tableBody.innerHTML = ''; } const emptyTest = {}; COLUMNS.forEach(key => { emptyTest[key] = (key === 'Active') ? true : (key === 'Device' ? 'web' : ''); }); emptyTest.TestID = `TEST_CASE_${tableBody.rows.length + 1}`; createRow(emptyTest); const newRowElement = tableBody.lastChild; if (newRowElement) { newRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); const testIdCell = newRowElement.querySelector('.testid-cell'); if (testIdCell) { testIdCell.focus(); document.execCommand('selectAll', false, null); } } setDirty(true); }
         function deleteRow(deleteIcon) { if (confirm("Sei sicuro di voler eliminare questa riga?")) { const tr = deleteIcon.closest('tr'); if (tr) tr.remove(); setDirty(true); if (tableBody.rows.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case...</td></tr>'; } } }
 
-        // --- Esecuzione Test ---
-        async function runTests() { if (isDirty) { showToast("Attenzione", "Salva le modifiche prima di avviare i test.", "danger"); return; } try { const statusRes = await fetch('/api/test-status'); const statusData = await statusRes.json(); if (statusData.status === 'running') { showToast("Errore", "Un test è già in esecuzione.", "danger"); outputModal.show(); return; } } catch (e) { showToast("Errore", `Impossibile contattare il server: ${e.message}`, "danger"); return; } outputLog.textContent = 'Avvio del processo di test...'; outputModal.show(); runTestButton.disabled = true; runSpinner.style.display = 'inline-block'; try { const response = await fetch(`/api/run-tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', }); if (!response.ok && response.headers.get('Content-Type')?.includes('text/plain')) { const errorText = await response.text(); outputLog.textContent += `\n\nERRORE SERVER (${response.status}): ${errorText}`; return; } const reader = response.body.getReader(); const decoder = new TextDecoder(); outputLog.textContent = ''; while (true) { const { value, done } = await reader.read(); if (done) break; const chunk = decoder.decode(value, {stream: true}); outputLog.textContent += chunk; outputLog.scrollTop = outputLog.scrollHeight; } } catch (error) { outputLog.textContent += `\n\nERRORE DI CONNESSIONE: ${error.message}`; } finally { runTestButton.disabled = false; runSpinner.style.display = 'none'; } }
+        // --- Esecuzione Test (CON SALVATAGGIO AUTOMATICO) ---
+        async function runTests() {
+            if (isDirty) {
+                if (confirm("Hai modifiche non salvate. Vuoi salvarle prima di avviare i test?")) {
+                    const saveSuccessful = await saveData();
+                    if (!saveSuccessful) {
+                        showToast("Errore", "Salvataggio fallito. Impossibile avviare i test.", "danger");
+                        return;
+                    }
+                    // Se salvataggio ok, isDirty è false, si procede
+                } else {
+                    showToast("Annullato", "Esecuzione test annullata (modifiche non salvate).", "warning");
+                    return;
+                }
+            }
+
+            try {
+                const statusRes = await fetch('/api/test-status'); const statusData = await statusRes.json();
+                if (statusData.status === 'running') { showToast("Errore", "Un test è già in esecuzione.", "danger"); outputModal.show(); return; }
+            } catch (e) { showToast("Errore", `Impossibile contattare il server: ${e.message}`, "danger"); return; }
+
+            outputLog.textContent = 'Avvio del processo di test...';
+            outputModal.show();
+            runTestButton.disabled = true; runSpinner.style.display = 'inline-block';
+            try {
+                const response = await fetch(`/api/run-tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', });
+                if (!response.ok && response.headers.get('Content-Type')?.includes('text/plain')) { const errorText = await response.text(); outputLog.textContent += `\n\nERRORE SERVER (${response.status}): ${errorText}`; return; }
+                const reader = response.body.getReader(); const decoder = new TextDecoder(); outputLog.textContent = '';
+                while (true) { const { value, done } = await reader.read(); if (done) break; const chunk = decoder.decode(value, {stream: true}); outputLog.textContent += chunk; outputLog.scrollTop = outputLog.scrollHeight; }
+            } catch (error) { outputLog.textContent += `\n\nERRORE DI CONNESSIONE: ${error.message}`; }
+            finally { runTestButton.disabled = false; runSpinner.style.display = 'none'; }
+        }
 
         // --- Gestione Upload ---
         async function uploadFile(file) { const formData = new FormData(); formData.append('file', file); const uploadButton = document.getElementById('upload-trigger-button'); uploadButton.disabled = true; uploadButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Caricamento...'; try { const response = await fetch('/api/upload-excel', { method: 'POST', body: formData }); const result = await response.json(); if (!response.ok || result.error) { throw new Error(result.error || response.statusText); } showToast("Upload", `File "${result.filename}" caricato.`, "success"); currentFile = result.filename; await loadExcelFiles(); await loadData(); } catch (error) { showToast("Errore Upload", `Impossibile caricare: ${error.message}`, "danger"); } finally { uploadButton.disabled = false; uploadButton.innerHTML = '<i class="bi bi-upload"></i> Carica Nuovo'; } }

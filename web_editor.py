@@ -196,7 +196,7 @@ def run_tests():
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 text=True, encoding='utf-8', bufsize=1, cwd=project_root
             )
-            yield "--- 🚀 Avvio dei test (usando file locale)... ---\n\n"
+            yield "--- 🚀 Avvio dei test ---\n\n"
             for line in iter(test_process.stdout.readline, ''):
                 yield line; time.sleep(0.01)
             test_process.stdout.close()
@@ -222,7 +222,6 @@ if __name__ == '__main__':
     #         print(f"ATTENZIONE: Impossibile forzare UTF-8: {e}")
 
     print(f"\n🚀 Avvio Test Editor su http://127.0.0.1:5000")
-    print("   L'editor ora legge e scrive file locali.")
     print("   Premi CTRL+C per fermare il server.")
     open_browser()
     app.run(host='127.0.0.1', port=5000, debug=False)
