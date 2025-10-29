@@ -1,5 +1,6 @@
 # Core Dependencies
 browser-use>=0.7.7
+app-use>=0.0.3
 python-dotenv>=1.0.0
 pandas>=2.0.0
 openpyxl>=3.1.0
