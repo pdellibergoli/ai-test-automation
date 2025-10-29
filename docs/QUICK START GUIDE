@@ -16,292 +16,207 @@ source .venv/bin/activate  # Mac/Linux
 # oppure
 .venv\Scripts\activate     # Windows
 
-# Installa dipendenze
+# 1. Installa dipendenze
 pip install -r requirements.txt
-```
 
-## 🔑 Step 2: Configurazione API Key
-
-Crea file `.env` nella root del progetto:
-
-```bash
-# Copia template
-cp .env.example .env  # Mac/Linux
-copy .env.example .env  # Windows
-
-# Modifica .env con il tuo editor preferito
-nano .env  # oppure usa VSCode, Notepad++, etc.
-```
-
-**Minimo richiesto per iniziare:**
-
-```bash
-# Nel file .env, aggiungi ALMENO questa chiave:
-GOOGLE_API_KEY=your_google_gemini_api_key_here
-```
-
-> 💡 **Ottieni una API key gratuita**: [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-## 📊 Step 3: Prepara File Excel
-
-### Opzione A: Crea nuovo file di esempio
-
-```bash
-python excel_helper.py
-
-# Scegli: 3. Crea file di esempio
-# Questo genera "dati_test_sample.xlsx"
-
-# Rinomina il file
-mv dati_test_sample.xlsx dati_test.xlsx  # Mac/Linux
-ren dati_test_sample.xlsx dati_test.xlsx  # Windows
-```
-
-### Opzione B: Usa file esistenti (se ce li hai già)
-
-```bash
-python excel_helper.py
-
-# Scegli: 1. Migra file Excel
-# Input: dati_test.xlsx (web) + dati_test_app.xlsx (mobile)
-# Output: dati_test_unified.xlsx
-
-# Rinomina se necessario
-mv dati_test_unified.xlsx dati_test.xlsx
-```
-
-### Opzione C: Crea manualmente
-
-Crea `dati_test.xlsx` con queste colonne:
-
-| Colonna | Valore Esempio |
-|---------|----------------|
-| TestID | WEB_001 |
-| Descrizione | Test ricerca Google |
-| Task | Navigate to google.com and search for "AI" |
-| Active | True |
-| Device | **web** o **mobile** |
-
-**IMPORTANTE**: La colonna `Device` determina se il test è mobile o web!
-
-## ✅ Step 4: Verifica Setup
-
-```bash
-# Test configurazione
-python config_manager.py
-```
-
-Dovresti vedere:
-```
-✅ Configuration ambiente validata con successo
-✅ Web config: ✅
-```
-
-## 🎯 Step 5: Esegui il Primo Test
-
-```bash
-python main_runner.py
-```
-
-Il sistema:
-1. ✅ Legge `dati_test.xlsx`
-2. ✅ Valida la configurazione
-3. ✅ Esegue i test con `Active=True`
-4. ✅ Genera report HTML
-5. ✅ Apre automaticamente il report nel browser
-
-## 🎉 Complimenti!
-
-Se sei arrivato qui, il setup è completo! 
-
-## 📱 Prossimi Passi per Test Mobile
-
-Se vuoi eseguire anche test mobile:
-
-### 1. Installa Appium
-
-```bash
-# Installa Node.js (prerequisito)
-# Scarica da: https://nodejs.org/
-
-# Installa Appium globalmente
-npm install -g appium
-
-# Installa driver
-appium driver install uiautomator2  # Android
-appium driver install xcuitest      # iOS (solo su Mac)
-```
-
-### 2. Avvia Appium Server
-
-```bash
-# In un terminale separato
-appium
-```
-
-Dovresti vedere: `Appium REST http interface listener started on...`
-
-### 3. Configura Device
-
-**Per Android Emulator:**
-
-```bash
-# Avvia emulator da Android Studio
-# oppure da command line:
-emulator -avd Pixel_6_API_33
-
-# Verifica connessione
-adb devices
-# Output atteso: List of devices attached
-#                emulator-5554    device
-```
-
-**Per device fisico Android:**
-
-```bash
-# 1. Abilita USB Debugging sul device
-# 2. Connetti via USB
-# 3. Verifica connessione
-adb devices
-```
-
-### 4. Aggiungi Test Mobile al Excel
-
-Aggiungi riga nel file `dati_test.xlsx`:
-
-| TestID | Descrizione | Task | Execution | Device | Platform | DeviceName | UDID | AppPackage | AppActivity |
-|--------|-------------|------|-----------|--------|----------|------------|------|------------|-------------|
-| MOB_001 | Test app Android | Open app and verify home screen | True | **mobile** | Android | Pixel 6 | emulator-5554 | com.example.app | .MainActivity |
-
-### 5. Esegui Test
-
-```bash
-python main_runner.py
-```
-
-## 🐛 Troubleshooting Rapido
-
-### Problema: "GOOGLE_API_KEY missing"
-
-```bash
-# Verifica il file .env esista
-ls -la .env  # Mac/Linux
-dir .env     # Windows
-
-# Aggiungi la chiave
+# 2. Crea .env con API key
+cp .env.example .env
 echo "GOOGLE_API_KEY=your_key_here" >> .env
-```
 
-### Problema: "File Excel non trovato"
+# 3. Avvia l'Editor Web
+python web_editor.py
 
-```bash
-# Crea file di esempio
-python excel_helper.py
-# Scegli opzione 3
+# 4. Usa l'Editor nel browser ([http://127.0.0.1:5000](http://127.0.0.1:5000))
+#    - Verrà creato dati_test.xlsx se non esiste
+#    - Aggiungi un test (o usa file di esempio caricandolo)
+#    - Salva
+#    - Clicca Avvia Test
+Per Test Mobile (+ 10 minuti)
+(Questa sezione rimane invariata).
 
-# Rinomina
-mv dati_test_sample.xlsx dati_test.xlsx
-```
+🎨 Features Principali
+(Aggiungere Web Editor)
 
-### Problema: "No module named 'browser_use'"
+✨ Unified runner
 
-```bash
-# Reinstalla dipendenze
-pip install -r requirements.txt
-```
+📝 Web Editor per gestione Test Case e avvio esecuzioni
 
-### Problema: Test mobile non parte
+🤖 AI-powered test execution
 
-```bash
-# Verifica Appium sia in esecuzione
-# Terminal 1:
-appium
+📊 Report HTML interattivi con screenshot
 
-# Terminal 2:
-python main_runner.py
-```
+🎬 GIF animate dell'esecuzione
 
-### Problema: Browser non si apre
+📱 Supporto mobile (Appium)
 
-```bash
-# Installa Chromium
-playwright install chromium --with-deps
-```
+🌐 Supporto web (Browser-Use)
 
-## 📚 Risorse Utili
+☁️ Cloud testing (LambdaTest)
 
-- **README completo**: Vedi `README.md` per documentazione dettagliata
-- **Esempi Excel**: Usa `excel_helper.py` (opzione 3) per esempi
-- **Configurazione avanzata**: Vedi documentazione in `excel_structure.md`
-- **Support**: Apri un issue su GitHub
+🔧 Configurazione centralizzata (.env)
 
-## 🎓 Tutorial Video (Coming Soon)
+✅ Validazione file Excel
 
-- [ ] Setup base in 5 minuti
-- [ ] Primo test web
-- [ ] Primo test mobile
-- [ ] Configurazione avanzata
+(Sezioni "In Development", "Future Ideas", "Metriche", "Contribuire", "Support", "License", "Credits" rimangono invariate).
 
-## ✨ Tips & Tricks
-
-### Tip 1: Debug Mode
-
-```bash
-# Nel file .env, aggiungi:
-DEBUG_MODE=true
-
-# Poi esegui
-python main_runner.py
-```
-
-Vedrai output molto più dettagliato.
-
-### Tip 2: Headless Browser (più veloce)
-
-```bash
-# Nel file .env:
-BROWSER_HEADLESS=true
-```
-
-Il browser non si aprirà visualmente, ma i test saranno più rapidi.
-
-### Tip 3: Cambia LLM Provider
-
-```bash
-# Nel file .env, per usare OpenAI:
-WEB_LLM_PROVIDER=openai
-OPENAI_API_KEY=your_openai_key
-OPENAI_MODEL=gpt-4.1-mini
-```
-
-### Tip 4: Test Selettivi
-
-Vuoi eseguire solo alcuni test? Nel file Excel, cambia:
-- `Active = True` → test viene eseguito ✅
-- `Active = False` → test viene saltato ⏭️
-
-### Tip 5: Organizza i Test
-
-Usa prefissi nei TestID per organizzare:
-- `WEB_SMOKE_001`, `WEB_SMOKE_002` → Test smoke web
-- `WEB_REG_001`, `WEB_REG_002` → Test regression web
-- `MOB_SMOKE_001` → Test smoke mobile
-- `MOB_REG_001` → Test regression mobile
-
-## 🆘 Still Having Issues?
-
-1. ✅ Verifica di aver completato **tutti** gli step 1-4
-2. ✅ Esegui `python config_manager.py` per diagnostica
-3. ✅ Verifica il file `.env` sia nella directory corretta
-4. ✅ Controlla che l'ambiente virtuale sia attivato
-5. ✅ Leggi il README completo per troubleshooting avanzato
-6. ✅ Apri un issue su GitHub con:
-   - Output di `python config_manager.py`
-   - Log di errore completo
-   - Sistema operativo e versione Python
 
 ---
 
-**Happy Testing! 🎉**
+## 4. `docs/Cheat Sheet` (Aggiornato)
 
-Made with ❤️  by Pasquale Delli Bergoli
+```markdown
+# 🚀 Cheat Sheet - AI Test Automation Framework
+
+Riferimento rapido per comandi e operazioni comuni.
+
+## 📦 Setup & Installation
+
+```bash
+# Crea/Attiva ambiente virtuale (.venv)
+python -m venv .venv && source .venv/bin/activate # Mac/Linux
+# python -m venv .venv && .venv\Scripts\activate # Windows
+
+# Installa dipendenze
+pip install -r requirements.txt
+
+# Installa browser/driver necessari
+playwright install chromium --with-deps
+# npm install -g appium && appium driver install uiautomator2 # Per Mobile
+⚙️ Configurazione
+Bash
+
+# Crea file .env da template
+cp .env.example .env # Mac/Linux
+# copy .env.example .env # Windows
+
+# Modifica .env (aggiungi almeno GOOGLE_API_KEY)
+
+# Test configurazione (opzionale)
+python config_manager.py
+📝 Gestione Test Case (Excel)
+Opzione 1: Web Editor (Consigliato)
+Bash
+
+# Avvia l'editor web
+python web_editor.py
+
+# Apri [http://127.0.0.1:5000](http://127.0.0.1:5000) nel browser
+# -> Seleziona, Carica, Modifica, Aggiungi, Elimina, Salva
+Opzione 2: CLI Helper
+Bash
+
+# Valida file Excel
+python excel_helper.py # Scegli opzione Validazione
+
+# Crea file Excel di esempio
+python excel_helper.py # Scegli opzione Crea Esempio
+Opzione 3: Manuale
+Modifica direttamente i file .xlsx con Excel/LibreOffice. Colonne richieste: TestID, Descrizione, Task, Active, Device ('web'/'mobile').
+
+🎯 Esecuzione Test
+Dal Web Editor
+Avvia: python web_editor.py
+
+Apri http://127.0.0.1:5000
+
+Seleziona il file Excel.
+
+Assicurati che i test desiderati siano Active=True.
+
+Clicca il pulsante <i class="bi bi-play-fill"></i> Avvia Test.
+
+Visualizza l'output nel modal.
+
+Da Terminale
+Bash
+
+# Esegui test dal file di default (dati_test.xlsx)
+python main_runner.py
+
+# Esegui test da un file specifico
+python main_runner.py --file nome_altro_file.xlsx
+📊 Report
+Bash
+
+# I report vengono generati in: reports/unified/YYYYMMDD_HHMMSS/
+# Si aprono automaticamente dopo l'esecuzione da terminale
+
+# Accedi all'elenco dei report tramite l'Editor Web:
+# 1. Avvia: python web_editor.py
+# 2. Apri [http://127.0.0.1:5000](http://127.0.0.1:5000)
+# 3. Clicca sul link "Vedi Report Esecuzioni"
+# -> Da qui puoi Aprire o Eliminare i report passati.
+📱 Mobile Testing (Setup)
+Bash
+
+# Avvia Appium server (terminale separato)
+appium
+
+# Lista/Avvia emulatori/simulatori
+adb devices # Android
+# emulator -avd Nome_AVD # Android
+# xcrun simctl list devices # iOS
+🌐 Web Testing (Setup)
+Normalmente non serve setup aggiuntivo dopo playwright install chromium. Per vedere il browser, imposta BROWSER_HEADLESS=false nel .env.
+
+🔍 Debugging
+Bash
+
+# Abilita log dettagliato nel .env
+# DEBUG_MODE=true
+# BROWSER_USE_LOGGING_LEVEL=DEBUG
+
+# Esegui script con encoding UTF-8 (per Windows)
+python -X utf8 web_editor.py
+python -X utf8 main_runner.py --file ...
+
+# Verifica dipendenze installate nell'ambiente attivo (.venv)
+pip list
+pip show pandas flask openpyxl browser-use Appium-Python-Client # ecc.
+🤖 LLM Configuration (nel .env)
+(Questa sezione rimane invariata).
+
+🔧 Troubleshooting
+(Questa sezione rimane invariata, aggiungendo magari controllo attivazione .venv).
+
+🎨 Customization
+(Questa sezione rimane invariata).
+
+🔄 Git Workflow
+(Questa sezione rimane invariata, ricordando di fare commit di web_editor.py, templates/*, vercel.json (se usato), *requirements.txt).
+
+📈 Performance Tips
+(Questa sezione rimane invariata).
+
+🔐 Security Best Practices
+(Questa sezione rimane invariata).
+
+📚 Comandi Utili Python
+(Questa sezione rimane invariata).
+
+🧪 Testing Commands (via Web Editor)
+Puoi facilmente eseguire test selettivi attivando/disattivando le righe nell'editor web prima di cliccare "Avvia Test".
+
+💡 Quick Tips (Aggiornato)
+Bash
+
+# Comando più usato per l'editor
+python web_editor.py
+
+# Comando più usato per esecuzione diretta
+python main_runner.py [--file ...]
+
+# Ferma server/esecuzione
+Ctrl+C
+
+# Ricarica forzata pagina editor nel browser
+Ctrl+Shift+R / Cmd+Shift+R
+
+# Backup Excel prima di modifiche massive nell'editor
+# (L'editor salva direttamente, fai backup manuale se necessario)
+🆘 Help Commands
+(Questa sezione rimane invariata).
+
+Tip: Gestisci i tuoi test in modo visuale con python web_editor.py! 🔖
+
+Made with ❤️ by Pasquale Delli Bergoli

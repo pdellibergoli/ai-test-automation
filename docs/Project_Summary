@@ -1,323 +1,60 @@
 # 📋 Project Summary - AI Test Automation Framework
 
-## 🎯 Overview
+Framework unificato per test automation usando AI agents. Supporta sia test **mobile** (iOS/Android via Appium) che **web** (browser via Browser-Use). La gestione dei test case avviene tramite file Excel, modificabili anche tramite un'**interfaccia web dedicata**.
 
-Framework unificato per test automation usando AI agents. Supporta sia test **mobile** (iOS/Android via Appium) che **web** (browser via Browser-Use) attraverso un'interfaccia unificata controllata da un singolo file Excel.
+## 🏗️ Architettura (Aggiornata)
 
-## 🏗️ Architettura
+┌─────────────────────────────────────────────────────────────┐ │ Web Editor (web_editor.py) │◀─┐ │ (Flask App @ localhost:5000) │ │ └────────────────────┬────────────────────────────────────────┘ │ │ │ ├─► Legge/Scrive: .xlsx (locali) │ Browser Utente ├─► Legge: reports/unified/ │ (per Modifica/Avvio) ├─► Avvia (subprocess): main_runner.py ───┘ │ ┌────────────────────▼────────────────────────────────────────┐ │ main_runner.py │ │ (Entry Point Esecuzione Test) │ └────────────────────┬────────────────────────────────────────┘ │ ├──► Legge: *.xlsx (specificato da arg o web editor) ├──► Valida: config_manager.py │ ┌────────────┴────────────┐ │ │ ▼ ▼ ┌───────────────┐ ┌───────────────┐ │ Device=mobile │ │ Device=web │ └───────┬───────┘ └───────┬───────┘ │ │ ▼ ▼ ┌─────────────────┐ ┌─────────────────┐ │MobileExecutor │ │ WebExecutor │ │(mobile_test_...)│ │(web_test_...) │ │ • Appium │ │ • Browser-Use │ │ • LambdaTest │ │ • ... │ └─────────────────┘ └─────────────────┘ │ │ └────────────┬────────────┘ │ ▼ ┌────────────────────────┐ │ HTMLReportGenerator │ │ (report_utils.py) │ └────────────────────────┘
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     main_runner.py                          │
-│              (Entry Point Principale)                       │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ├──► Legge: dati_test.xlsx
-                     ├──► Valida: config_manager.py
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-        ▼                         ▼
-┌───────────────┐         ┌───────────────┐
-│ Device=mobile │         │  Device=web   │
-└───────┬───────┘         └───────┬───────┘
-        │                         │
-        ▼                         ▼
-┌─────────────────┐       ┌─────────────────┐
-│MobileExecutor   │       │  WebExecutor    │
-│                 │       │                 │
-│ • Appium        │       │ • Browser-Use   │
-│ • app_class.py  │       │ • Playwright    │
-│ • LambdaTest    │       │ • Chromium      │
-└─────────────────┘       └─────────────────┘
-        │                         │
-        └────────────┬────────────┘
-                     │
-                     ▼
-        ┌────────────────────────┐
-        │   HTMLReportGenerator  │
-        │  (report_utils.py)     │
-        └────────────────────────┘
-```
 
-## 📁 Struttura File
+## 📁 Struttura File (Aggiornata)
 
-```
-aitestautomation/
-│
-├── 🚀 CORE FILES (NUOVI)
-│   ├── main_runner.py              # Entry point principale - USA QUESTO
-│   ├── config_manager.py           # Gestione configurazione centralizzata
-│   ├── excel_helper.py             # Tool per gestione file Excel
-│   ├── dati_test.xlsx              # File Excel unificato (mobile + web)
-│   ├── .env                        # Configurazione (DA CREARE, vedi .env.example)
-│   └── .env.example                # Template configurazione
-│
-├── 📱 MOBILE TESTING
-│   ├── tests/
-│   │   └── mobile_test_executor.py # Executor per test mobile
-│   ├── app_class.py                # Wrapper Appium
-│   ├── app_use/                    # Package agent mobile
-│   └── screen/mobile/              # Screenshot test mobile
-│
-├── 🌐 WEB TESTING
-│   ├── tests/
-│   │   └── web_test_executor.py    # Executor per test web
-│   ├── system_prompt.txt           # System prompt custom (opzionale)
-│   └── screen/web/                 # Screenshot test web
-│
-├── 🛠️ UTILITIES
-│   ├── utilities/
-│   │   ├── excel_utils.py          # Lettura file Excel
-│   │   ├── report_utils.py         # Generazione report HTML
-│   │   ├── set_capabilities.py     # Configurazione Appium
-│   │   └── utils.py                # Utility generiche
-│   └── browseruse_agent_data/      # Dati agent
-│
-├── 📊 REPORTS & OUTPUT
-│   ├── reports/
-│   │   └── unified/                # Report unificati (mobile + web)
-│   │       └── YYYYMMDD_HHMMSS/
-│   │           └── test_report_*.html
-│   └── agent_history.gif           # GIF esecuzione agente
-│
-├── 📚 DOCUMENTATION
-│   ├── README.md                   # Documentazione principale
-│   ├── QUICK_START.md              # Guida rapida
-│   └── docs/                       # Documentazione extra
-│
-├── ⚙️ CONFIGURATION
-│   ├── .gitignore                  # File da escludere da Git
-│   ├── requirements.txt            # Dipendenze Python
-│   └── .vscode/                    # Configurazione VSCode
-│
-│
-```
+aitestautomation/ │ ├── 🚀 CORE FILES │ ├── main_runner.py # Entry point esecuzione test │ ├── web_editor.py # NUOVO: Entry point editor web │ ├── config_manager.py # Gestione configurazione .env │ ├── excel_helper.py # Tool CLI per Excel (alternativa a web editor) │ ├── dati_test.xlsx # File Excel di default │ ├── .env # Configurazione (DA CREARE) │ └── .env.example # Template configurazione │ ├── 📝 TEMPLATES (NUOVO) │ └── templates/ │ ├── index.html # Frontend editor web │ └── reports.html # Frontend lista report │ ├── 📱 MOBILE TESTING │ ├── tests/mobile_test_executor.py # Executor mobile │ ├── app_class.py # Wrapper Appium │ └── app_use/ # Package agent mobile │ ├── 🌐 WEB TESTING │ ├── tests/web_test_executor.py # Executor web │ └── system_prompt.txt # System prompt custom │ ├── 🛠️ UTILITIES │ ├── utilities/ │ │ ├── excel_utils.py # Lettura Excel │ │ ├── report_utils.py # Generazione report HTML │ │ ├── set_capabilities.py # Config Appium │ │ └── utils.py # Funzioni generiche │ └── browseruse_agent_data/ # Dati agent │ ├── 📊 REPORTS & OUTPUT │ ├── reports/unified/ # Report unificati (letti da web editor) │ ├── screen/mobile/ # Screenshot mobile │ ├── screen/web/ # Screenshot web │ └── agent_history.gif # GIF esecuzione agente │ ├── 📚 DOCUMENTATION │ ├── README.md # Documentazione principale │ ├── QUICK_START.md # Guida rapida │ └── docs/ # Documentazione extra │ ├── ⚙️ CONFIGURATION │ ├── .gitignore # File ignorati da Git │ ├── requirements.txt # Dipendenze Python │ └── .vscode/ # Config VSCode
 
-## 🔑 File Chiave
+
+## 🔑 File Chiave (Aggiornato)
 
 ### 1. main_runner.py
-**Cosa fa**: Entry point principale che:
-- Legge `dati_test.xlsx`
-- Valida configurazione
-- Instradrà test verso l'executor corretto (mobile o web)
-- Genera report unificato
-
-**Come usare**:
+**Cosa fa**: Esegue i test da un file Excel specificato. Legge configurazione, instrada verso l'executor corretto, genera report. Può essere lanciato da terminale o dall'editor web.
+**Come usare (Terminale)**:
 ```bash
-python main_runner.py
-```
+python main_runner.py [--file nomefile.xlsx]
+2. web_editor.py (NUOVO)
+Cosa fa: Avvia un server web locale (Flask) che fornisce un'interfaccia per:
 
-### 2. config_manager.py
-**Cosa fa**: Gestisce tutte le configurazioni:
-- Carica variabili da `.env`
-- Valida configurazione
-- Fornisce accesso type-safe alle impostazioni
+Visualizzare/Modificare/Aggiungere/Eliminare test nei file .xlsx.
 
-**Come usare**:
-```bash
+Caricare nuovi file .xlsx.
+
+Avviare l'esecuzione dei test (main_runner.py) per il file selezionato.
+
+Visualizzare l'output dei test in tempo reale.
+
+Accedere all'elenco dei report generati. Come usare:
+
+Bash
+
+python web_editor.py
+# Apri [http://127.0.0.1:5000](http://127.0.0.1:5000) nel browser
+3. config_manager.py
+Cosa fa: Gestisce la configurazione caricata da .env (API keys, settings). Come usare:
+
+Bash
+
 # Test configurazione
 python config_manager.py
-```
+4. excel_helper.py
+Cosa fa: Tool da riga di comando per validare o creare file Excel di esempio. Utile se non si usa l'editor web. Come usare:
 
-### 3. excel_helper.py
-**Cosa fa**: Tool interattivo per:
-- Unire file Excel separati (web + mobile)
-- Validare file Excel unificato
-- Creare file di esempio
+Bash
 
-**Come usare**:
-```bash
 python excel_helper.py
 # Segui menu interattivo
-```
+5. templates/ (NUOVO)
+Cosa contiene: I file index.html (editor) e reports.html (lista report) usati da web_editor.py.
 
-### 4. dati_test.xlsx
-**Cosa contiene**: Tutti i test case con struttura:
+6. dati_test.xlsx (e altri .xlsx)
+Cosa contiene: I test case con le colonne richieste (TestID, Descrizione, Task, Active, Device, ecc.). Modificabile manualmente o tramite l'editor web.
 
-**Colonne obbligatorie**:
-- `TestID`: Identificatore univoco
-- `Descrizione`: Descrizione test
-- `Task`: Prompt per AI agent
-- `Active`: True/False per eseguire
-- **`Device`**: "mobile" o "web" ← **IMPORTANTE**
-
-**Colonne per mobile** (solo se Device=mobile):
-- `Platform`, `DeviceName`, `UDID`, `AppPackage`, `AppActivity`, etc.
-
-### 5. .env
-**Cosa contiene**: Variabili di configurazione:
-- API keys (Gemini, OpenAI, etc.)
-- Credentials LambdaTest
-- Configurazioni browser
-- Logging settings
-
-**Come creare**:
-```bash
-cp .env.example .env
-# Poi modifica con il tuo editor
-```
-
-## 🔄 Flusso Esecuzione
-
-```mermaid
-graph TD
-    A[User esegue: python main_runner.py] --> B[Load config_manager]
-    B --> C[Valida .env]
-    C --> D{Config OK?}
-    D -->|No| E[Mostra errori, Exit]
-    D -->|Yes| F[Leggi dati_test.xlsx]
-    F --> G[Filtra: Execution=True]
-    G --> H{Per ogni test}
-    H --> I{Device=?}
-    I -->|mobile| J[MobileTestExecutor]
-    I -->|web| K[WebTestExecutor]
-    J --> L[Esegui con Appium]
-    K --> M[Esegui con Browser-Use]
-    L --> N[Salva screenshot]
-    M --> N
-    N --> O[Aggiungi a report]
-    O --> P{Altri test?}
-    P -->|Si| H
-    P -->|No| Q[Finalizza report HTML]
-    Q --> R[Apri report nel browser]
-```
-
-## 🚀 Come Iniziare
-
-### Setup Rapido (5 minuti)
-
-```bash
-# 1. Installa dipendenze
-pip install -r requirements.txt
-
-# 2. Crea .env con API key
-echo "GOOGLE_API_KEY=your_key_here" > .env
-
-# 3. Crea file Excel di esempio
-python excel_helper.py
-# Scegli opzione 3
-
-# 4. Rinomina file
-mv dati_test_sample.xlsx dati_test.xlsx
-
-# 5. Esegui test
-python main_runner.py
-```
-
-### Per Test Mobile (+ 10 minuti)
-
-```bash
-# 1. Installa Appium
-npm install -g appium
-appium driver install uiautomator2
-
-# 2. Avvia Appium (terminale separato)
-appium
-
-# 3. Avvia emulator/device Android
-# Android Studio > AVD Manager > Start
-
-# 4. Aggiungi test mobile al Excel
-# Colonna Device = "mobile"
-
-# 5. Esegui
-python main_runner.py
-```
-
-## 🎨 Features Principali
-
-### ✅ Implementate
-
-- ✨ Unified runner (mobile + web in un solo comando)
-- 🤖 AI-powered test execution (Gemini, OpenAI, Ollama)
-- 📊 Report HTML interattivi con screenshot
-- 🎬 GIF animate dell'esecuzione
-- 📱 Supporto mobile (Android + iOS via Appium)
-- 🌐 Supporto web (Chromium via Browser-Use)
-- ☁️ Cloud testing (LambdaTest)
-- 🔧 Configurazione centralizzata (config_manager)
-- 🔄 Tool migrazione Excel
-- 📝 Documentazione completa
-
-### 🚧 In Development
-
-- ⚡ Esecuzione parallela test
-- 📧 Notifiche email/Slack
-- 🔗 Integrazione Jira/TestRail
-- 📈 Dashboard analytics
-- 🎥 Video recording esecuzione
-- 🌍 Multi-language support
-
-### 💡 Future Ideas
-
-- 🧪 AI-generated test cases
-- 🔍 Visual regression testing
-- 🤖 Self-healing tests
-- 📱 Cross-browser testing
-- ☁️ Multi-cloud support
-
-## 📊 Metriche
-
-- **Test supportati**: Mobile (iOS/Android) + Web
-- **LLM supportati**: Gemini, OpenAI, Anthropic, Ollama
-- **Report format**: HTML interattivo
-- **Cloud providers**: LambdaTest (più in arrivo)
-- **Linguaggi**: Python 3.11+
-
-## 🤝 Contribuire
-
-### Per sviluppatori
-
-```bash
-# Clone repo
-git clone https://github.com/your-org/aitestautomation.git
-
-# Crea branch feature
-git checkout -b feature/amazing-feature
-
-# Commit changes
-git commit -m "Add amazing feature"
-
-# Push to branch
-git push origin feature/amazing-feature
-
-# Apri Pull Request
-```
-
-### Aree di contributo
-
-- 🐛 Bug fixes
-- ✨ Nuove features
-- 📝 Documentazione
-- 🧪 Test coverage
-- 🌍 Traduzioni
-- 💡 Ideas e feedback
-
-## 📞 Support & Community
-
-- 📧 **Email**: support@example.com
-- 💬 **Discord**: [Join Server](https://discord.gg/your-server)
-- 📖 **Docs**: [Full Documentation](./docs/)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/your-org/aitestautomation/issues)
-- 💡 **Discussions**: [GitHub Discussions](https://github.com/your-org/aitestautomation/discussions)
-
-## 📄 License
-
-MIT License - vedi [LICENSE](./LICENSE) per dettagli
-
-## 🙏 Credits & Thanks
-
-- **Browser-Use Team**: Amazing web automation framework
-- **Appium Team**: Mobile automation standard
-- **Google Gemini**: Powerful AI capabilities
-- **LambdaTest**: Cloud testing platform
-- **Community Contributors**: Thank you all!
-
----
-
-**Version**: 2.0.0  
-**Last Updated**: 2024  
-**Status**: 🟢 Active Development
-
-Made with ❤️ by Pasquale Delli Bergoli
+7. .env
+Cosa contiene: Chiavi API e configurazioni sensibili. Da creare copiando .env.example.

@@ -4,21 +4,23 @@ Framework unificato per test automation con AI agents, supporta sia test **mobil
 
 ## 🚀 Features
 
-- ✨ **Unified Runner**: Gestione unificata di test mobile e web
-- 🤖 **AI-Powered**: Usa LLM (Gemini, OpenAI, Ollama) per interpretare task in linguaggio naturale
-- 📱 **Mobile Testing**: Supporto completo per iOS e Android via Appium
-- 🌐 **Web Testing**: Automazione browser con Browser-Use
-- 📊 **HTML Reports**: Report interattivi con screenshot e GIF animate
-- ☁️ **Cloud Support**: Integrazione con LambdaTest per testing su cloud
-- 🔄 **Excel Configuration**: Configurazione test tramite file Excel
+- ✨ **Unified Runner**: Gestione unificata di test mobile e web.
+- 🤖 **AI-Powered**: Usa LLM (Gemini, OpenAI, Ollama) per interpretare task in linguaggio naturale.
+- 📱 **Mobile Testing**: Supporto completo per iOS e Android via Appium.
+- 🌐 **Web Testing**: Automazione browser con Browser-Use.
+- 📊 **HTML Reports**: Report interattivi con screenshot e GIF animate.
+- ☁️ **Cloud Support**: Integrazione con LambdaTest per testing su cloud.
+- 📝 **Web Editor**: Interfaccia web per gestire i file Excel dei test case (aggiungere, modificare, eliminare righe, avviare esecuzioni).
+- 🔄 **Excel Configuration**: Configurazione test tramite file Excel.
 
 ## 📋 Requisiti
 
 ### Software
-- Python 3.11+
-- Node.js (per Appium)
-- Appium Server
-- Browser Chromium/Chrome
+- Python 3.11+.
+- Node.js (per Appium).
+- Appium Server.
+- Browser Chromium/Chrome.
+- Flask (per l'editor web).
 
 ### Installazione Dipendenze
 
@@ -42,103 +44,118 @@ appium driver install xcuitest      # iOS
 
 # Installa Playwright (per test web)
 playwright install chromium --with-deps
-```
 
-## ⚙️ Configurazione
+⚙️ Configurazione
+1. File .env
+Crea un file .env nella root del progetto copiando .env.example. Modifica almeno una API key per un provider LLM (es. GOOGLE_API_KEY).
 
-### 1. File .env
+Bash
 
-Crea un file `.env` nella root del progetto:
-
-```bash
+# Esempio minimo
 # === LLM Configuration ===
-GEMINI_MODEL=gemini-2.5-flash
 GOOGLE_API_KEY=your_google_api_key
 
-# OpenAI (opzionale)
-OPENAI_MODEL=gpt-4.1-mini
-OPENAI_API_KEY=your_openai_key
-
-# Local LLM con Ollama (opzionale)
-USE_LOCAL_LLM=false
-LOCAL_LLM=llava:13b
-
-# LLM per test web
-WEB_LLM_PROVIDER=gemini  # gemini|openai|ollama
-
-# === Mobile Testing (LambdaTest) ===
+# === Mobile Testing (LambdaTest - Opzionale) ===
 LT_USERNAME=your_lambdatest_username
 LT_ACCESS_KEY=your_lambdatest_access_key
 
 # === Misc ===
 ANONYMIZED_TELEMETRY=false
 BROWSER_HEADLESS=false
-```
 
-### 2. File Excel
+2. File Excel
+Il file dati_test.xlsx (o un altro file .xlsx nella root) contiene i test case. Puoi gestirlo manualmente o usare l'editor web.
 
-Il file `dati_test.xlsx` deve contenere le seguenti colonne:
+Colonne Obbligatorie (per tutti i test)
+TestID: Identificatore univoco (es: WEB_001, MOB_001).
 
-#### Colonne Obbligatorie (per tutti i test)
-- `TestID`: Identificatore univoco (es: WEB_001, MOB_001)
-- `Descrizione`: Descrizione human-readable del test
-- `Task`: Task in linguaggio naturale per l'AI agent
-- `Active`: `True`/`False` per eseguire o saltare il test
-- **`Device`**: `mobile` o `web` ← **NUOVO CAMPO CHIAVE**
+Descrizione: Descrizione human-readable del test.
 
-#### Colonne per Test Mobile (required solo se Device="mobile")
-- `Execution`: `local` o `cloud` gestisce l'esecuzione in cloud LambdaTest (AppID richiesto) o in loale
-- `Platform`: `Android` o `iOS`
-- `DeviceName`: Nome del dispositivo (es: Pixel 6, iPhone 14)
-- `UDID`: Device ID per esecuzione locale
-- `AppPackage`: Package name Android (es: com.example.app)
-- `AppActivity`: Activity Android (es: .MainActivity)
-- `AppID`: App ID per LambdaTest (es: lt://APP123456, da usare solo con Execution = 'cloud')
+Task: Task in linguaggio naturale per l'AI agent.
 
-#### Esempio Excel
+Active: True/False per eseguire o saltare il test.
 
-| TestID | Descrizione | Task | Active | Execution | Device | Platform | DeviceName | AppPackage | AppID |
-|--------|-------------|------|--------|-----------|--------|----------|------------|------------|-------|
-| WEB_001 | Google Search | Search for "AI agents" on google.com | True | local | web | - | - | - | - |
-| MOB_001 | Android Login | Open app and login | True | cloud | mobile | Android | Pixel 6 | com.app | lt://APP123456 |
+Device: mobile o web.
 
-## 🎯 Utilizzo
+Colonne per Test Mobile (solo se Device="mobile")
+Execution: local o cloud.
 
-### Esecuzione Standard
+Platform: Android o iOS.
 
-```bash
-# Esegui tutti i test con Active=True
+DeviceName: Nome del dispositivo.
+
+UDID: Device ID per esecuzione locale.
+
+AppPackage: Package name Android.
+
+AppActivity: Activity Android.
+
+AppID: App ID per LambdaTest (solo con Execution = 'cloud').
+
+🎯 Utilizzo
+Opzione 1: Esecuzione Standard da Terminale
+Bash
+
+# Esegui tutti i test attivi dal file di default (dati_test.xlsx)
 python main_runner.py
-```
 
-Il sistema:
-1. Legge `dati_test.xlsx`
-2. Filtra test con `Active=True`
-3. Instradrà automaticamente verso:
-   - `MobileTestExecutor` se `Device=mobile`
-   - `WebTestExecutor` se `Device=web`
-4. Genera report HTML unificato
-5. Apre report nel browser
+# Esegui test da un file specifico
+python main_runner.py --file nome_altro_file.xlsx
+Il sistema legge l'Excel, filtra i test attivi, li instrada all'executor corretto (mobile/web) e genera/apre il report HTML.
 
-### Debug
+Opzione 2: Gestione ed Esecuzione tramite Web Editor
+Avvia l'Editor Web:
 
-```bash
-# Abilita logging dettagliato
-export BROWSER_USE_LOGGING_LEVEL=debug  # Linux/Mac
-set BROWSER_USE_LOGGING_LEVEL=debug    # Windows
+Bash
 
-# Esegui con debug
-python main_runner.py
-```
+python web_editor.py
+Il browser si aprirà automaticamente su http://127.0.0.1:5000.
 
-## 📁 Struttura Progetto
+Usa l'Interfaccia:
 
-```
+Seleziona il file Excel dal menu a tendina.
+
+Carica nuovi file .xlsx dal tuo disco.
+
+Modifica i dati nelle celle (doppio click o seleziona e scrivi).
+
+Attiva/Disattiva test con le checkbox.
+
+Aggiungi/Elimina righe.
+
+Espandi righe con task lunghi.
+
+Salva le modifiche (il pulsante appare solo se ci sono modifiche).
+
+Avvia Test: Clicca sul pulsante <i class="bi bi-play-fill"></i> per eseguire i test attivi nel file attualmente visualizzato. L'output apparirà in una finestra modale.
+
+Visualizza Report: Clicca su "Vedi Report" per accedere all'elenco delle esecuzioni passate e aprirle o eliminarle.
+
+Ferma l'Editor: Premi CTRL+C nel terminale dove hai avviato web_editor.py.
+
+Debug
+Bash
+
+# Abilita logging dettagliato (imposta nel .env o come variabile d'ambiente)
+# BROWSER_USE_LOGGING_LEVEL=DEBUG
+# DEBUG_MODE=true
+
+# Esegui con encoding forzato (per Windows, se hai problemi con caratteri speciali)
+python -X utf8 main_runner.py
+python -X utf8 web_editor.py
+
+📁 Struttura Progetto (Aggiornata)
 aitestautomation/
-├── main_runner.py              # Entry point principale
-├── dati_test.xlsx              # File Excel unificato
+├── main_runner.py              # Entry point esecuzione test
+├── web_editor.py               # NUOVO: Entry point editor web
+├── dati_test.xlsx              # File Excel di default
 ├── .env                        # Configurazione (GIT IGNORED)
+├── requirements.txt            # Dipendenze Python
 ├── system_prompt.txt           # System prompt custom per web tests
+│
+├── templates/                  # NUOVO: File HTML per l'editor web
+│   ├── index.html
+│   └── reports.html
 │
 ├── tests/
 │   ├── mobile_test_executor.py # Executor test mobile
@@ -160,89 +177,61 @@ aitestautomation/
 │           └── test_report_*.html
 │
 ├── app_class.py                # Wrapper Appium per test mobile
-└── app_use/                    # Package Browser-Use agent per mobile
-```
+└── app_use/                    # Package App-Use agent per mobile
 
-## 📊 Report
+📊 Report
+Il report HTML generato da main_runner.py include:
 
-Il report HTML include:
+Summary Dashboard
 
-- 📈 **Summary Dashboard**: Totale / Passati / Falliti
-- 🖼️ **Screenshots interattivi**: Click per ingrandire
-- 🎬 **GIF Animata**: Replay completo dell'esecuzione
-- ✅❌ **Status Colorati**: Verde (pass) / Rosso (fail)
-- 🔍 **Step-by-Step**: Espandi/Collassa ogni step
-- 📱🌐 **Mixed Tests**: Test mobile e web nello stesso report
+Screenshot interattivi
 
-Location: `reports/unified/YYYYMMDD_HHMMSS/test_report_*.html`
+GIF Animata (se abilitata)
 
-## 🔧 Troubleshooting
+Status Colorati
 
-### Problema: "Campo obbligatorio mancante: Device"
+Step-by-Step
 
-**Soluzione**: Aggiungi colonna `Device` nel file Excel con valori `mobile` o `web`
+Location: reports/unified/YYYYMMDD_HHMMSS/test_report_*.html. Puoi accedere all'elenco tramite il link "Vedi Report" nell'editor web.
 
-### Problema: Test mobile non parte
+🔧 Troubleshooting
+Problema: Web Editor non trova index.html (TemplateNotFound)
+Soluzione: Assicurati che i file index.html e reports.html siano dentro una cartella chiamata templates allo stesso livello di web_editor.py. Verifica che .gitignore non stia ignorando i file .html.
 
-**Checklist**:
-1. ✅ Appium server in esecuzione: `appium`
-2. ✅ Device connesso: `adb devices` (Android) o `xcrun simctl list` (iOS)
-3. ✅ UDID corretto nel file Excel
-4. ✅ App installata sul device
-5. ✅ Variabili `.env` configurate
+Problema: ModuleNotFoundError: No module named 'pandas' (o altre librerie)
+Soluzione: Assicurati che l'ambiente virtuale .venv sia attivo ((.venv) visibile nel terminale) e reinstalla le dipendenze: pip install -r requirements.txt.
 
-### Problema: Test web non parte
+Problema: Caratteri speciali/Emoji non visibili nel terminale (UnicodeEncodeError)
+Soluzione: Esegui gli script con -X utf8 (python -X utf8 web_editor.py) o rimuovi/sostituisci i caratteri problematici (come nel banner di main_runner.py o le emoji in config_manager.py).
 
-**Checklist**:
-1. ✅ Browser-Use installato: `pip install browser-use`
-2. ✅ Chromium installato: `playwright install chromium --with-deps`
-3. ✅ API key configurata in `.env`
-4. ✅ File `system_prompt.txt` presente (opzionale)
+Problema: Test mobile non parte
+Checklist: Appium server in esecuzione (appium)? Device connesso/emulatore avviato (adb devices)? UDID corretto? App installata? Variabili .env (per cloud) corrette?
 
-### Problema: "No module named 'app_use'"
+Problema: Test web non parte
+Checklist: Browser-Use installato? Chromium installato (playwright install chromium --with-deps)? API key LLM configurata in .env?
 
-**Soluzione**:
-```bash
-# Verifica PYTHONPATH
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"  # Linux/Mac
-set PYTHONPATH=%PYTHONPATH%;%CD%          # Windows
-```
+📞 Support
+📧 Email: pasquale.dellibergoli91@gmail.com
 
-## 🆕 What's New
+📖 Docs: Vedi cartella docs/.
 
-### v2.0 - Unified Runner (Attuale)
+📄 License
+MIT License
 
-- ✨ Single entry point (`main_runner.py`) per tutti i test
-- 🔄 Routing automatico basato su colonna `Device`
-- 📊 Report unificati per mobile + web
-- 📚 Documentazione completa
+🤝 Contributing
+Pull requests are welcome!
 
-### v1.0 - Dual System (Deprecato)
+🙏 Credits
+Browser-Use
 
-- File separati: `mobile_AI_test.py` + `web_AI_test.py`
-- Excel separati: `dati_test_app.xlsx` + `dati_test.xlsx`
-- Report separati
+App-Use
 
-## 📞 Support
+Appium
 
-- 📧 Email: pasquale.dellibergoli91@gmail.com
-- 📖 Docs: [Full Documentation](./docs/Project_Summary)
+LambdaTest
 
-## 📄 License
+Flask
 
-[MIT License](LICENSE) - vedi file LICENSE per dettagli
+Pandas
 
-## 🤝 Contributing
-
-Pull requests are welcome! Per cambiamenti maggiori, apri prima un issue per discutere cosa vorresti modificare.
-
-## 🙏 Credits
-
-- [Browser-Use](https://github.com/browser-use/browser-use) - Web automation framework
-- [App-Use](https://github.com/erickjtorres/app-use) - Web automation framework
-- [Appium](https://appium.io/) - Mobile automation
-- [LambdaTest](https://www.lambdatest.com/) - Cloud testing platform
-
----
-
-**Made with ❤️ by Pasquale Delli Bergoli**
+Made with ❤️ by Pasquale Delli Bergoli

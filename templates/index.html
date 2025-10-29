@@ -12,76 +12,52 @@
         .container-fluid { max-width: 98%; }
         table { table-layout: auto; }
 
-        /* Stile base per celle di testo */
         td.editable-cell {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 8px !important;
-            vertical-align: middle !important;
-            font-size: 0.9rem;
-            height: 44px; /* Altezza fissa per allineamento icone */
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 8px !important; vertical-align: middle !important; font-size: 0.9rem; height: 44px;
         }
-
-        /* Stile per celle espandibili (es. Task) */
-        td.expandable-cell {
-            max-height: 50px;
-            transition: max-height 0.2s ease-out;
-        }
-
-        /* Stile quando la riga è espansa */
+        td.expandable-cell { max-height: 50px; transition: max-height 0.2s ease-out; }
         tr.expanded td.expandable-cell {
-            max-height: 500px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            transition: max-height 0.3s ease-in;
-            height: auto;
+            max-height: 500px; white-space: pre-wrap; word-wrap: break-word; transition: max-height 0.3s ease-in; height: auto;
         }
+        td[contenteditable="true"] { background-color: #404040; cursor: cell; }
+        td[contenteditable="true"]:focus { background-color: #5a6268; outline: 2px solid #0d6efd; }
 
-        td[contenteditable="true"] {
-            background-color: #404040;
-            cursor: cell;
+        .action-cell {
+             width: 80px; text-align: center; vertical-align: middle !important;
         }
-        td[contenteditable="true"]:focus {
-            background-color: #5a6268;
-            outline: 2px solid #0d6efd;
-        }
-
-        /* Colonna Azioni interna alla tabella */
-        .action-cell .btn-delete-icon, /* Usiamo classi separate */
+        .action-cell .btn-delete-icon,
         .action-cell .expand-icon {
-            cursor: pointer;
-            font-size: 1.2rem;
-            /* Rimuovi margini specifici qui se li avevi, flexbox li gestirà */
-            /* margin-left: 4px; */
-            /* margin-right: 4px; */
-            opacity: 0.8;
-            transition: all 0.2s ease;
+            cursor: pointer; font-size: 1.2rem; margin-left: 4px; margin-right: 4px; opacity: 0.8; transition: all 0.2s ease;
         }
         .action-cell .btn-delete-icon { color: #dc3545; }
-        .action-cell .expand-icon { color: #0d6efd; margin-left: 0.5rem; /* Aggiungi un piccolo spazio a sinistra dell'icona expand */}
+        .action-cell .expand-icon { color: #0d6efd; }
         .action-cell .btn-delete-icon:hover { opacity: 1; color: #ff4d62; transform: scale(1.1); }
         .action-cell .expand-icon:hover { opacity: 1; transform: scale(1.1); }
-
-        /* Icone per espandere/collassare */
         .expand-icon::before { content: "\F229"; font-family: "bootstrap-icons"; } /* Plus */
         tr.expanded .expand-icon::before { content: "\F2E6"; } /* Minus */
 
-
-        /* Larghezze fisse per colonne chiave */
         .active-cell { width: 80px; text-align: center; }
         .testid-cell { width: 150px; font-weight: bold; }
         .task-cell { width: 400px; max-width: 450px; }
         .device-cell { width: 100px; }
 
-        /* Pulsante Salva */
         .save-button-container { position: fixed; bottom: 20px; right: 20px; z-index: 1050; display: none; }
         .save-button-container .btn { font-size: 1.2rem; padding: 12px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
         .loading-spinner { display: none; margin-left: 10px; }
 
-        /* Stile per il Modal di Output Test */
-        #test-output-modal .modal-body { background: #111; color: #eee; font-family: 'Courier New', Courier, monospace; }
-        #test-output-log { white-space: pre-wrap; word-wrap: break-word; height: 400px; overflow-y: auto; font-size: 0.9rem; }
+        /* Stile Modal Dinamico */
+        #test-output-modal .modal-dialog {
+            max-width: calc(100vw - 80px); height: calc(100vh - 80px); margin: 40px auto; display: flex; flex-direction: column;
+        }
+        #test-output-modal .modal-content {
+            flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;
+        }
+        #test-output-modal .modal-body {
+            flex-grow: 1; overflow-y: auto; background: #111; color: #eee; font-family: 'Courier New', Courier, monospace;
+        }
+        #test-output-log {
+             white-space: pre-wrap; word-wrap: break-word; font-size: 0.9rem; /* height e overflow rimossi */
+        }
     </style>
 </head>
 <body>
@@ -122,12 +98,7 @@
                     </tr>
                 </thead>
                 <tbody id="test-table-body">
-                    <tr>
-                        <td colspan="13" class="text-center p-5">
-                            <div class="spinner-border text-primary" role="status"></div>
-                            <p class="mt-2">Caricamento dati...</p>
-                        </td>
-                    </tr>
+                    <tr><td colspan="13" class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-2">Caricamento dati...</p></td></tr>
                 </tbody>
             </table>
         </div>
@@ -136,11 +107,28 @@
     <div class="save-button-container" id="save-button-container">
         <button class="btn btn-primary" id="save-button" onclick="saveData()">
             <i class="bi bi-save"></i> Salva Modifiche
-            <div class="spinner-border spinner-border-sm loading-spinner" id="save-spinner" role="status"></div>
+            <div class="spinner-border spinner-border-sm loading-spinner" id="save-spinner"></div>
         </button>
     </div>
 
-    <div class="modal fade" id="test-output-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true"> <div class="modal-dialog modal-xl modal-dialog-scrollable"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title" id="modal-title"> <div class="spinner-border spinner-border-sm text-success me-2" id="run-spinner" role="status" style="display: none;"></div> Esecuzione Test </h5> <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> </div> <div class="modal-body"> <pre id="test-output-log">Pronto per avviare i test...</pre> </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button> </div> </div> </div> </div>
+    <div class="modal fade" id="test-output-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable"> <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modal-title">
+                <div class="spinner-border spinner-border-sm text-success me-2" id="run-spinner" style="display: none;"></div>
+                Esecuzione Test
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <pre id="test-output-log">Pronto per avviare i test...</pre>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3"> <div id="save-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"> <div class="toast-header"> <strong class="me-auto" id="toast-title">Notifica</strong> <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button> </div> <div class="toast-body" id="toast-body"></div> </div> </div>
 
@@ -168,7 +156,7 @@
         ];
         const TASK_TRUNCATE_LENGTH = 100;
 
-        // --- Inizializzazione (invariata) ---
+        // --- Inizializzazione ---
         document.addEventListener('DOMContentLoaded', async () => {
             await loadExcelFiles();
             await loadData();
@@ -181,14 +169,14 @@
 
         // --- Gestione Dati Tabella ---
         async function loadData() {
-            tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Caricamento ${currentFile}...</p></td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-2">Caricamento ${currentFile}...</p></td></tr>`;
             try {
                 const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`);
                  if (!response.ok) { let errorMsg = `Errore server: ${response.statusText}`; try { const errData = await response.json(); if (errData.error) errorMsg = errData.error; } catch(e){} throw new Error(errorMsg); }
                 const tests = await response.json();
                 tableBody.innerHTML = '';
                 if (tests.error) throw new Error(tests.error);
-                if (tests.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case. Clicca "Aggiungi" per iniziare.</td></tr>'; }
+                if (tests.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case...</td></tr>'; }
                 else { tests.forEach(test => createRow(test)); }
             } catch (error) { const msg = `Impossibile caricare i dati: ${error.message}`; tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-4 text-danger">${msg}</td></tr>`; showToast("Errore Caricamento", msg, "danger"); }
         }
@@ -197,46 +185,32 @@
             const tr = document.createElement('tr');
             const rowId = testData.TestID || `new_${Date.now()}`;
             tr.dataset.id = rowId;
-
             const taskText = testData['Task'] || '';
             const isTaskLong = taskText.length > TASK_TRUNCATE_LENGTH || taskText.includes('\n');
 
-            // Cella Azioni (Elimina + Espandi - Modificata)
             const actionTd = document.createElement('td');
             actionTd.className = 'action-cell';
-
-            // Contenitore flessibile per le icone (per metterle in riga)
             const iconContainer = document.createElement('div');
-            iconContainer.className = 'd-flex justify-content-center align-items-center'; // Usa flexbox di Bootstrap
-
-            // Icona Elimina
+            iconContainer.className = 'd-flex justify-content-center align-items-center';
             const deleteIcon = document.createElement('i');
             deleteIcon.className = 'bi bi-trash-fill btn-delete-icon';
             deleteIcon.title = 'Elimina Riga';
-            deleteIcon.onclick = () => deleteRow(deleteIcon); // Passa l'icona stessa
+            deleteIcon.onclick = () => deleteRow(deleteIcon);
             iconContainer.appendChild(deleteIcon);
-
-            // Icona Espandi (o placeholder)
             if (isTaskLong) {
                 const expandIcon = document.createElement('i');
-                expandIcon.className = 'bi expand-icon ms-2'; // Aggiunto ms-2 per spazio
+                expandIcon.className = 'bi expand-icon ms-2';
                 expandIcon.title = 'Espandi/Collassa Riga';
-                expandIcon.onclick = () => toggleRowExpand(expandIcon); // Passa l'icona stessa
+                expandIcon.onclick = () => toggleRowExpand(expandIcon);
                 iconContainer.appendChild(expandIcon);
             } else {
-                // Aggiungi uno span vuoto per mantenere lo spazio se non c'è l'icona expand
                 const placeholder = document.createElement('span');
-                placeholder.style.display = 'inline-block';
-                placeholder.style.width = '1.2rem'; // Larghezza simile all'icona
-                placeholder.style.marginLeft = '4px'; // Spazio simile a ms-2
+                placeholder.style.display = 'inline-block'; placeholder.style.width = '1.2rem'; placeholder.style.marginLeft = '0.5rem';
                 iconContainer.appendChild(placeholder);
             }
-
             actionTd.appendChild(iconContainer);
             tr.appendChild(actionTd);
 
-
-            // Crea le celle della tabella (Active, TestID, ...)
             COLUMNS.forEach(key => {
                 const td = document.createElement('td');
                 td.dataset.key = key;
@@ -252,40 +226,24 @@
             if (tr) { tr.classList.toggle('expanded'); }
         }
 
-
-        // --- Salvataggio Dati (invariato) ---
+        // --- Salvataggio Dati ---
         async function saveData() { setSaveButtonLoading(true); const data = []; const rows = tableBody.querySelectorAll('tr'); try { let hasEmptyTestID = false; rows.forEach(tr => { if (tr.querySelector('td[colspan]')) return; const rowData = {}; tr.querySelectorAll('td[data-key]').forEach(td => { const key = td.dataset.key; if (key === 'Active') { rowData[key] = td.querySelector('input[type="checkbox"]').checked; } else { rowData[key] = td.textContent; } }); if (!rowData.TestID || rowData.TestID.trim() === '') { hasEmptyTestID = true; const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = 'red'; } else { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; } data.push(rowData); }); if (hasEmptyTestID) { throw new Error("Tutti i 'TestID' sono obbligatori."); } rows.forEach(tr => { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; }); const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (!response.ok) { const errorResult = await response.json(); throw new Error(errorResult.error || response.statusText); } showToast("Salvataggio", "Dati salvati con successo!", "success"); setDirty(false); await loadData(); } catch (error) { showToast("Errore Salvataggio", `Impossibile salvare: ${error.message}`, "danger"); } finally { setSaveButtonLoading(false); } }
         function setSaveButtonLoading(isLoading) { const saveButton = document.getElementById('save-button'); if (isLoading) { saveButton.disabled = true; saveSpinner.style.display = 'inline-block'; } else { saveButton.disabled = false; saveSpinner.style.display = 'none'; } }
 
-        // --- Gestione Modifiche (Dirty Flag) (invariata) ---
+        // --- Gestione Modifiche (Dirty Flag) ---
         function setDirty(state) { isDirty = state; saveButtonContainer.style.display = state ? 'block' : 'none'; }
 
-        // --- Gestione Righe (Aggiungi/Elimina) ---
-        function addNewRow() {
-            const placeholder = tableBody.querySelector('td[colspan]');
-            if (placeholder) { tableBody.innerHTML = ''; }
-            const emptyTest = {}; COLUMNS.forEach(key => { emptyTest[key] = (key === 'Active') ? true : (key === 'Device' ? 'web' : ''); }); emptyTest.TestID = `TEST_CASE_${tableBody.rows.length + 1}`;
-            createRow(emptyTest);
-            const newRowElement = tableBody.lastChild; if (newRowElement) { newRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); const testIdCell = newRowElement.querySelector('.testid-cell'); if (testIdCell) { testIdCell.focus(); document.execCommand('selectAll', false, null); } } setDirty(true);
-        }
+        // --- Gestione Righe ---
+        function addNewRow() { const placeholder = tableBody.querySelector('td[colspan]'); if (placeholder) { tableBody.innerHTML = ''; } const emptyTest = {}; COLUMNS.forEach(key => { emptyTest[key] = (key === 'Active') ? true : (key === 'Device' ? 'web' : ''); }); emptyTest.TestID = `TEST_CASE_${tableBody.rows.length + 1}`; createRow(emptyTest); const newRowElement = tableBody.lastChild; if (newRowElement) { newRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); const testIdCell = newRowElement.querySelector('.testid-cell'); if (testIdCell) { testIdCell.focus(); document.execCommand('selectAll', false, null); } } setDirty(true); }
+        function deleteRow(deleteIcon) { if (confirm("Sei sicuro di voler eliminare questa riga?")) { const tr = deleteIcon.closest('tr'); if (tr) tr.remove(); setDirty(true); if (tableBody.rows.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case...</td></tr>'; } } }
 
-        function deleteRow(deleteIcon) {
-            // Ora l'icona è dentro la cella Azioni
-            if (confirm("Sei sicuro di voler eliminare questa riga?")) {
-                const tr = deleteIcon.closest('tr');
-                if (tr) tr.remove();
-                setDirty(true);
-                if (tableBody.rows.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case...</td></tr>'; }
-            }
-        }
-
-        // --- Esecuzione Test (invariata) ---
+        // --- Esecuzione Test ---
         async function runTests() { if (isDirty) { showToast("Attenzione", "Salva le modifiche prima di avviare i test.", "danger"); return; } try { const statusRes = await fetch('/api/test-status'); const statusData = await statusRes.json(); if (statusData.status === 'running') { showToast("Errore", "Un test è già in esecuzione.", "danger"); outputModal.show(); return; } } catch (e) { showToast("Errore", `Impossibile contattare il server: ${e.message}`, "danger"); return; } outputLog.textContent = 'Avvio del processo di test...'; outputModal.show(); runTestButton.disabled = true; runSpinner.style.display = 'inline-block'; try { const response = await fetch(`/api/run-tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', }); if (!response.ok && response.headers.get('Content-Type')?.includes('text/plain')) { const errorText = await response.text(); outputLog.textContent += `\n\nERRORE SERVER (${response.status}): ${errorText}`; return; } const reader = response.body.getReader(); const decoder = new TextDecoder(); outputLog.textContent = ''; while (true) { const { value, done } = await reader.read(); if (done) break; const chunk = decoder.decode(value, {stream: true}); outputLog.textContent += chunk; outputLog.scrollTop = outputLog.scrollHeight; } } catch (error) { outputLog.textContent += `\n\nERRORE DI CONNESSIONE: ${error.message}`; } finally { runTestButton.disabled = false; runSpinner.style.display = 'none'; } }
 
-        // --- Gestione Upload (invariata) ---
-        async function uploadFile(file) { const formData = new FormData(); formData.append('file', file); const uploadButton = document.getElementById('upload-trigger-button'); uploadButton.disabled = true; uploadButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Caricamento...'; try { const response = await fetch('/api/upload-excel', { method: 'POST', body: formData }); const result = await response.json(); if (!response.ok || result.error) { throw new Error(result.error || response.statusText); } showToast("Upload", `File "${result.filename}" caricato con successo.`, "success"); currentFile = result.filename; await loadExcelFiles(); await loadData(); } catch (error) { showToast("Errore Upload", `Impossibile caricare il file: ${error.message}`, "danger"); } finally { uploadButton.disabled = false; uploadButton.innerHTML = '<i class="bi bi-upload"></i> Carica Nuovo'; } }
+        // --- Gestione Upload ---
+        async function uploadFile(file) { const formData = new FormData(); formData.append('file', file); const uploadButton = document.getElementById('upload-trigger-button'); uploadButton.disabled = true; uploadButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Caricamento...'; try { const response = await fetch('/api/upload-excel', { method: 'POST', body: formData }); const result = await response.json(); if (!response.ok || result.error) { throw new Error(result.error || response.statusText); } showToast("Upload", `File "${result.filename}" caricato.`, "success"); currentFile = result.filename; await loadExcelFiles(); await loadData(); } catch (error) { showToast("Errore Upload", `Impossibile caricare: ${error.message}`, "danger"); } finally { uploadButton.disabled = false; uploadButton.innerHTML = '<i class="bi bi-upload"></i> Carica Nuovo'; } }
 
-        // --- Utility Notifica (Toast) (invariata) ---
+        // --- Utility Notifica (Toast) ---
         function showToast(title, body, type = 'success') { const toastTitle = document.getElementById('toast-title'); const toastBody = document.getElementById('toast-body'); toastTitle.textContent = title; toastBody.textContent = body; toastElement.classList.remove('text-bg-success', 'text-bg-danger'); if (type === 'success') { toastElement.classList.add('text-bg-success'); } else if (type === 'danger') { toastElement.classList.add('text-bg-danger'); } bsToast.show(); }
     </script>
 </body>
