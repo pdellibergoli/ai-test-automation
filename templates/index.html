@@ -20,7 +20,19 @@
             max-height: 500px; white-space: pre-wrap; word-wrap: break-word; transition: max-height 0.3s ease-in; height: auto;
         }
         td[contenteditable="true"] { background-color: #404040; cursor: cell; }
-        td[contenteditable="true"]:focus { background-color: #5a6268; outline: 2px solid #0d6efd; }
+        td[contenteditable="true"]:focus {
+            background-color: #5a6268;
+            outline: 2px solid #0d6efd;
+            box-shadow: 0 0 5px #0d6efd; /* Aggiunto per visibilità */
+
+            /* --- QUESTE SONO LE NUOVE REGOLE FONDAMENTALI --- */
+            white-space: pre-wrap;    /* Permette di andare a capo e rispetta gli "Enter" */
+            word-wrap: break-word;  /* Rompe le parole lunghe che non rientrano */
+            overflow: visible;      /* Mostra il contenuto che sfora */
+            text-overflow: clip;    /* Rimuove i '...' */
+            height: auto;           /* Permette alla cella di crescere in altezza */
+            min-height: 44px;       /* Mantiene almeno l'altezza della riga */
+        }
         .action-cell {
              width: 80px; text-align: center; vertical-align: middle !important;
         }
@@ -68,7 +80,7 @@
                     <input type="file" id="file-uploader" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display: none;">
                     <button class="btn btn-outline-secondary" id="upload-trigger-button" title="Carica un file .xlsx dal tuo computer"><i class="bi bi-upload"></i> Carica Nuovo</button>
                 </div>
-                <button class="btn btn-outline-success" onclick="addNewRow()"><i class="bi bi-plus-lg"></i> Aggiungi</button>
+                <button class="btn btn-outline-success" onclick="addNewRow()"><i class="bi bi-plus-lg"></i> Add Step</button>
                 <button class="btn btn-success" id="run-test-button" onclick="runTests()"><i class="bi bi-play-fill"></i> Avvia Test</button>
             </div>
         </div>
