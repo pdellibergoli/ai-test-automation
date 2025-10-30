@@ -8,6 +8,8 @@ Supporto completo per test **Mobile** (iOS/Android) e **Web** (Browser)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Appium](https://img.shields.io/badge/Appium-Ready-purple.svg)](http://appium.io/)
+[![Browser-Use](https://img.shields.io/badge/Browser--Use-Integrated-orange.svg)](https://github.com/browser-use/browser-use)
+[![App-Use](https://img.shields.io/badge/App--Use-Integrated-red.svg)](https://github.com/app-use/app-use)
 
 </div>
 
