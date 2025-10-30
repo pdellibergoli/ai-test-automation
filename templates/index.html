@@ -6,102 +6,58 @@
     <title>AI Test Automation - Editor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
     <style>
-        /* (Tutto il CSS rimane invariato) */
-        body { padding: 20px; }
-        .container-fluid { max-width: 98%; }
-        table { table-layout: auto; }
-        td.editable-cell {
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 8px !important; vertical-align: middle !important; font-size: 0.9rem; height: 44px;
-        }
+        body { padding: 20px; } .container-fluid { max-width: 98%; } table { table-layout: auto; }
+        td.editable-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 8px !important; vertical-align: middle !important; font-size: 0.9rem; height: 44px; }
         td.expandable-cell { max-height: 50px; transition: max-height 0.2s ease-out; }
-        tr.expanded td.expandable-cell {
-            max-height: 500px; white-space: pre-wrap; word-wrap: break-word; transition: max-height 0.3s ease-in; height: auto;
-        }
+        tr.expanded td.expandable-cell { max-height: 500px; white-space: pre-wrap; word-wrap: break-word; transition: max-height 0.3s ease-in; height: auto; }
         td[contenteditable="true"] { background-color: #404040; cursor: cell; }
-        td[contenteditable="true"]:focus {
-            background-color: #5a6268;
-            outline: 2px solid #0d6efd;
-            box-shadow: 0 0 5px #0d6efd; /* Aggiunto per visibilità */
-
-            /* --- QUESTE SONO LE NUOVE REGOLE FONDAMENTALI --- */
-            white-space: pre-wrap;    /* Permette di andare a capo e rispetta gli "Enter" */
-            word-wrap: break-word;  /* Rompe le parole lunghe che non rientrano */
-            overflow: visible;      /* Mostra il contenuto che sfora */
-            text-overflow: clip;    /* Rimuove i '...' */
-            height: auto;           /* Permette alla cella di crescere in altezza */
-            min-height: 44px;       /* Mantiene almeno l'altezza della riga */
-        }
-        .action-cell {
-             width: 80px; text-align: center; vertical-align: middle !important;
-        }
-        .action-cell .btn-delete-icon,
-        .action-cell .expand-icon {
-            cursor: pointer; font-size: 1.2rem; margin-left: 4px; margin-right: 4px; opacity: 0.8; transition: all 0.2s ease;
-        }
-        .action-cell .btn-delete-icon { color: #dc3545; }
-        .action-cell .expand-icon { color: #0d6efd; }
+        td[contenteditable="true"]:focus { background-color: #5a6268; outline: 2px solid #0d6efd; white-space: pre-wrap; overflow: visible; text-overflow: clip; height: auto; min-height: 44px; }
+        .action-cell { width: 80px; text-align: center; vertical-align: middle !important; }
+        .action-cell .btn-delete-icon, .action-cell .expand-icon { cursor: pointer; font-size: 1.2rem; margin-left: 4px; margin-right: 4px; opacity: 0.8; transition: all 0.2s ease; }
+        .action-cell .btn-delete-icon { color: #dc3545; } .action-cell .expand-icon { color: #0d6efd; margin-left: 0.5rem; }
         .action-cell .btn-delete-icon:hover { opacity: 1; color: #ff4d62; transform: scale(1.1); }
         .action-cell .expand-icon:hover { opacity: 1; transform: scale(1.1); }
-        .expand-icon::before { content: "\F229"; font-family: "bootstrap-icons"; } /* Plus */
-        tr.expanded .expand-icon::before { content: "\F2E6"; } /* Minus */
-        .active-cell { width: 80px; text-align: center; }
-        .testid-cell { width: 150px; font-weight: bold; }
-        .task-cell { width: 400px; max-width: 450px; }
-        .device-cell { width: 100px; }
+        .expand-icon::before { content: "\F229"; font-family: "bootstrap-icons"; } tr.expanded .expand-icon::before { content: "\F2E6"; }
+        .active-cell { width: 80px; text-align: center; } .testid-cell { width: 150px; font-weight: bold; }
+        .task-cell { width: 400px; max-width: 450px; } .device-cell { width: 100px; }
         .save-button-container { position: fixed; bottom: 20px; right: 20px; z-index: 1050; display: none; }
         .save-button-container .btn { font-size: 1.2rem; padding: 12px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
         .loading-spinner { display: none; margin-left: 10px; }
-        #test-output-modal .modal-dialog {
-            max-width: calc(100vw - 80px); height: calc(100vh - 80px); margin: 40px auto; display: flex; flex-direction: column;
-        }
-        #test-output-modal .modal-content {
-            flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;
-        }
-        #test-output-modal .modal-body {
-            flex-grow: 1; overflow-y: auto; background: #111; color: #eee; font-family: 'Courier New', Courier, monospace;
-        }
-        #test-output-log {
-             white-space: pre-wrap; word-wrap: break-word; font-size: 0.9rem;
-        }
+        #test-output-modal .modal-dialog { max-width: calc(100vw - 80px); height: calc(100vh - 80px); margin: 40px auto; display: flex; flex-direction: column; }
+        #test-output-modal .modal-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #test-output-modal .modal-body { flex-grow: 1; overflow-y: auto; background: #111; color: #eee; font-family: 'Courier New', Courier, monospace; }
+        #test-output-log { white-space: pre-wrap; word-wrap: break-word; font-size: 0.9rem; }
     </style>
 </head>
 <body>
-
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>📋 AI Test Automation - Editor</h2>
             <div class="d-flex align-items-center gap-2">
                 <a href="/reports" class="btn btn-outline-info"><i class="bi bi-bar-chart-line-fill"></i> Vedi Report</a>
-                <label for="file-selector" class="form-label mb-0">File:</label>
+                
+                <a href="/generate" class="btn btn-outline-warning">
+                    <i class="bi bi-robot"></i> Genera Test
+                </a>
+                
+                <label for="file-selector" class="form-label mb-0 ms-3">File:</label>
                 <div class="input-group" style="width: auto;">
                     <select id="file-selector" class="form-select" style="width: auto;"></select>
                     <input type="file" id="file-uploader" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display: none;">
                     <button class="btn btn-outline-secondary" id="upload-trigger-button" title="Carica un file .xlsx dal tuo computer"><i class="bi bi-upload"></i> Carica Nuovo</button>
                 </div>
-                <button class="btn btn-outline-success" onclick="addNewRow()"><i class="bi bi-plus-lg"></i> Add Step</button>
+                <button class="btn btn-outline-success" onclick="addNewRow()"><i class="bi bi-plus-lg"></i> Aggiungi</button>
                 <button class="btn btn-success" id="run-test-button" onclick="runTests()"><i class="bi bi-play-fill"></i> Avvia Test</button>
             </div>
         </div>
-
         <div class="table-responsive">
             <table class="table table-bordered table-hover table-sm" id="test-table">
                 <thead class="table-dark" style="position: sticky; top: 0; z-index: 10;">
                     <tr>
-                        <th class="action-cell">Azione</th>
-                        <th class="active-cell">Active</th>
-                        <th class="testid-cell">TestID</th>
-                        <th>Descrizione</th>
-                        <th class="task-cell">Task</th>
-                        <th class="device-cell">Device</th>
-                        <th>Platform</th>
-                        <th>DeviceName</th>
-                        <th>UDID</th>
-                        <th>AppID</th>
-                        <th>AppPackage</th>
-                        <th>AppActivity</th>
-                        <th>Execution</th>
+                        <th class="action-cell">Azione</th> <th class="active-cell">Active</th> <th class="testid-cell">TestID</th> <th>Descrizione</th>
+                        <th class="task-cell">Task</th> <th class="device-cell">Device</th> <th>Platform</th> <th>DeviceName</th>
+                        <th>UDID</th> <th>AppID</th> <th>AppPackage</th> <th>AppActivity</th> <th>Execution</th>
                     </tr>
                 </thead>
                 <tbody id="test-table-body">
@@ -110,14 +66,12 @@
             </table>
         </div>
     </div>
-
     <div class="save-button-container" id="save-button-container"> <button class="btn btn-primary" id="save-button" onclick="saveData()"> <i class="bi bi-save"></i> Salva Modifiche <div class="spinner-border spinner-border-sm loading-spinner" id="save-spinner"></div> </button> </div>
     <div class="modal fade" id="test-output-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true"> <div class="modal-dialog modal-dialog-scrollable"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title" id="modal-title"> <div class="spinner-border spinner-border-sm text-success me-2" id="run-spinner" style="display: none;"></div> Esecuzione Test </h5> <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> </div> <div class="modal-body"> <pre id="test-output-log">Pronto per avviare i test...</pre> </div> <div class="modal-footer justify-content-between"> <button type="button" class="btn btn-danger" id="stop-test-button" onclick="stopTests()" style="display: none;"> <i class="bi bi-stop-circle-fill"></i> STOP ESECUZIONE </button> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button> </div> </div> </div> </div>
     <div class="toast-container position-fixed bottom-0 end-0 p-3"> <div id="save-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"> <div class="toast-header"> <strong class="me-auto" id="toast-title">Notifica</strong> <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button> </div> <div class="toast-body" id="toast-body"></div> </div> </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- Variabili Globali (invariate) ---
         const tableBody = document.getElementById('test-table-body');
         const saveButtonContainer = document.getElementById('save-button-container');
         const saveSpinner = document.getElementById('save-spinner');
@@ -132,13 +86,9 @@
         const stopTestButton = document.getElementById('stop-test-button');
         let isDirty = false;
         let currentFile = 'dati_test.xlsx';
-        const COLUMNS = [
-            'Active', 'TestID', 'Descrizione', 'Task', 'Device', 'Platform',
-            'DeviceName', 'UDID', 'AppID', 'AppPackage', 'AppActivity', 'Execution'
-        ];
+        const COLUMNS = [ 'Active', 'TestID', 'Descrizione', 'Task', 'Device', 'Platform', 'DeviceName', 'UDID', 'AppID', 'AppPackage', 'AppActivity', 'Execution' ];
         const TASK_TRUNCATE_LENGTH = 100;
 
-        // --- Inizializzazione (invariata) ---
         document.addEventListener('DOMContentLoaded', async () => {
             await loadExcelFiles(); await loadData();
             fileSelector.addEventListener('change', (e) => { if (isDirty) { if (!confirm("Modifiche non salvate. Cambiare file?")) { e.target.value = currentFile; return; } } currentFile = e.target.value; setDirty(false); loadData(); });
@@ -147,138 +97,64 @@
             fileUploader.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { uploadFile(file); } e.target.value = null; });
         });
         async function loadExcelFiles() { try { const response = await fetch('/api/excel-files'); const files = await response.json(); fileSelector.innerHTML = ''; files.forEach(file => { const option = new Option(file, file, false, false); option.selected = (file === currentFile); fileSelector.add(option); }); } catch (error) { showToast("Errore", "Impossibile caricare l'elenco dei file.", "danger"); } }
-
-        // --- Gestione Dati Tabella ---
         async function loadData() {
             tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-2">Caricamento ${currentFile}...</p></td></tr>`;
             try {
                 const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`);
                  if (!response.ok) { let errorMsg = `Errore server: ${response.statusText}`; try { const errData = await response.json(); if (errData.error) errorMsg = errData.error; } catch(e){} throw new Error(errorMsg); }
-                const tests = await response.json();
-                tableBody.innerHTML = '';
+                const tests = await response.json(); tableBody.innerHTML = '';
                 if (tests.error) throw new Error(tests.error);
                 if (tests.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case...</td></tr>'; }
                 else { tests.forEach(test => createRow(test)); }
             } catch (error) { const msg = `Impossibile caricare i dati: ${error.message}`; tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-4 text-danger">${msg}</td></tr>`; showToast("Errore Caricamento", msg, "danger"); }
         }
-
-        // --- createRow (MODIFICATA) ---
         function createRow(testData) {
-            const tr = document.createElement('tr');
-            const rowId = testData.TestID || `new_${Date.now()}`;
-            tr.dataset.id = rowId;
-            const taskText = testData['Task'] || '';
-            const isTaskLong = taskText.length > TASK_TRUNCATE_LENGTH || taskText.includes('\n');
-
-            const actionTd = document.createElement('td');
-            actionTd.className = 'action-cell';
-            const iconContainer = document.createElement('div');
-            iconContainer.className = 'd-flex justify-content-center align-items-center';
-            const deleteIcon = document.createElement('i');
-            deleteIcon.className = 'bi bi-trash-fill btn-delete-icon';
-            deleteIcon.title = 'Elimina Riga';
-            deleteIcon.onclick = () => deleteRow(deleteIcon);
-            iconContainer.appendChild(deleteIcon);
-            
+            const tr = document.createElement('tr'); const rowId = testData.TestID || `new_${Date.now()}`; tr.dataset.id = rowId;
+            const taskText = testData['Task'] || ''; const isTaskLong = taskText.length > TASK_TRUNCATE_LENGTH || taskText.includes('\n');
+            const actionTd = document.createElement('td'); actionTd.className = 'action-cell';
+            const iconContainer = document.createElement('div'); iconContainer.className = 'd-flex justify-content-center align-items-center';
+            const deleteIcon = document.createElement('i'); deleteIcon.className = 'bi bi-trash-fill btn-delete-icon'; deleteIcon.title = 'Elimina Riga';
+            deleteIcon.onclick = () => deleteRow(deleteIcon); iconContainer.appendChild(deleteIcon);
             if (isTaskLong) {
-                const expandIcon = document.createElement('i');
-                expandIcon.className = 'bi expand-icon ms-2';
-                expandIcon.title = 'Espandi/Collassa Riga';
-                expandIcon.onclick = () => toggleRowExpand(expandIcon);
-                iconContainer.appendChild(expandIcon);
+                const expandIcon = document.createElement('i'); expandIcon.className = 'bi expand-icon ms-2'; expandIcon.title = 'Espandi/Collassa Riga';
+                expandIcon.onclick = () => toggleRowExpand(expandIcon); iconContainer.appendChild(expandIcon);
             } else {
-                const placeholder = document.createElement('span');
-                placeholder.className = 'expand-placeholder'; // Classe per trovarlo
-                placeholder.style.display = 'inline-block';
-                placeholder.style.width = '1.2rem';
-                placeholder.style.marginLeft = '0.5rem';
+                const placeholder = document.createElement('span'); placeholder.className = 'expand-placeholder';
+                placeholder.style.display = 'inline-block'; placeholder.style.width = '1.2rem'; placeholder.style.marginLeft = '0.5rem';
                 iconContainer.appendChild(placeholder);
             }
-            actionTd.appendChild(iconContainer);
-            tr.appendChild(actionTd);
-
+            actionTd.appendChild(iconContainer); tr.appendChild(actionTd);
             COLUMNS.forEach(key => {
-                const td = document.createElement('td');
-                td.dataset.key = key;
-                if (key === 'Active') { 
-                    td.classList.add('active-cell'); const checkbox = document.createElement('input'); 
-                    checkbox.type = 'checkbox'; checkbox.className = 'form-check-input'; 
-                    checkbox.checked = testData[key] === true; 
-                    checkbox.onchange = () => setDirty(true); 
-                    td.appendChild(checkbox); 
-                }
-                else { 
-                    td.textContent = testData[key] || ''; 
-                    td.contentEditable = "true"; 
-                    
-                    // --- MODIFICA QUI ---
-                    // Aggiungi l'event listener oninput
-                    td.oninput = (event) => {
-                        setDirty(true);
-                        // Se questa è la cella "Task", aggiorna l'icona
-                        if (key === 'Task') {
-                            updateExpandIcon(event.target);
-                        }
-                    };
-                    // --- FINE MODIFICA ---
-                    
-                    td.classList.add('editable-cell'); 
-                    if (key === 'TestID') td.classList.add('testid-cell'); 
-                    if (key === 'Device') td.classList.add('device-cell'); 
-                    if (key === 'Task') { td.classList.add('task-cell', 'expandable-cell'); } 
+                const td = document.createElement('td'); td.dataset.key = key;
+                if (key === 'Active') { td.classList.add('active-cell'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'form-check-input'; checkbox.checked = testData[key] === true; checkbox.onchange = () => setDirty(true); td.appendChild(checkbox); }
+                else {
+                    td.textContent = testData[key] || ''; td.contentEditable = "true";
+                    td.oninput = (event) => { setDirty(true); if (key === 'Task') { updateExpandIcon(event.target); } };
+                    td.classList.add('editable-cell'); if (key === 'TestID') td.classList.add('testid-cell'); if (key === 'Device') td.classList.add('device-cell'); if (key === 'Task') { td.classList.add('task-cell', 'expandable-cell'); }
                 }
                 tr.appendChild(td);
             });
             tableBody.appendChild(tr);
         }
-
-        function toggleRowExpand(icon) {
-            const tr = icon.closest('tr');
-            if (tr) { tr.classList.toggle('expanded'); }
-        }
-        
-        // --- NUOVA FUNZIONE ---
+        function toggleRowExpand(icon) { const tr = icon.closest('tr'); if (tr) { tr.classList.toggle('expanded'); } }
         function updateExpandIcon(taskCell) {
-            const tr = taskCell.closest('tr');
-            if (!tr) return;
-            const actionCell = tr.querySelector('.action-cell');
-            if (!actionCell) return;
-            const iconContainer = actionCell.querySelector('.d-flex');
-            if (!iconContainer) return;
-
-            const taskText = taskCell.textContent || '';
-            const isTaskLong = taskText.length > TASK_TRUNCATE_LENGTH || taskText.includes('\n');
-
-            const existingIcon = iconContainer.querySelector('.expand-icon');
-            const existingPlaceholder = iconContainer.querySelector('.expand-placeholder');
-
+            const tr = taskCell.closest('tr'); if (!tr) return; const actionCell = tr.querySelector('.action-cell'); if (!actionCell) return;
+            const iconContainer = actionCell.querySelector('.d-flex'); if (!iconContainer) return;
+            const taskText = taskCell.textContent || ''; const isTaskLong = taskText.length > TASK_TRUNCATE_LENGTH || taskText.includes('\n');
+            const existingIcon = iconContainer.querySelector('.expand-icon'); const existingPlaceholder = iconContainer.querySelector('.expand-placeholder');
             if (isTaskLong && !existingIcon) {
-                // Aggiungi icona, rimuovi placeholder
                 if (existingPlaceholder) existingPlaceholder.remove();
-
-                const expandIcon = document.createElement('i');
-                expandIcon.className = 'bi expand-icon ms-2';
-                expandIcon.title = 'Espandi/Collassa Riga';
-                expandIcon.onclick = () => toggleRowExpand(expandIcon);
-                iconContainer.appendChild(expandIcon);
-
+                const expandIcon = document.createElement('i'); expandIcon.className = 'bi expand-icon ms-2'; expandIcon.title = 'Espandi/Collassa Riga';
+                expandIcon.onclick = () => toggleRowExpand(expandIcon); iconContainer.appendChild(expandIcon);
             } else if (!isTaskLong && existingIcon) {
-                // Rimuovi icona, aggiungi placeholder
                 existingIcon.remove();
-
-                const placeholder = document.createElement('span');
-                placeholder.className = 'expand-placeholder';
-                placeholder.style.display = 'inline-block';
-                placeholder.style.width = '1.2rem';
-                placeholder.style.marginLeft = '0.5rem';
+                const placeholder = document.createElement('span'); placeholder.className = 'expand-placeholder';
+                placeholder.style.display = 'inline-block'; placeholder.style.width = '1.2rem'; placeholder.style.marginLeft = '0.5rem';
                 iconContainer.appendChild(placeholder);
             }
         }
-
-        // --- Salvataggio Dati (RESTITUISCE BOOLEANO) ---
         async function saveData() {
-            setSaveButtonLoading(true); const data = []; const rows = tableBody.querySelectorAll('tr');
-            let saveSuccessful = false;
+            setSaveButtonLoading(true); const data = []; const rows = tableBody.querySelectorAll('tr'); let saveSuccessful = false;
             try {
                 let hasEmptyTestID = false;
                 rows.forEach(tr => {
@@ -291,48 +167,32 @@
                 rows.forEach(tr => { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; });
                 const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 if (!response.ok) { const errorResult = await response.json(); throw new Error(errorResult.error || response.statusText); }
-                showToast("Salvataggio", "Dati salvati con successo!", "success");
-                setDirty(false);
-                saveSuccessful = true;
+                showToast("Salvataggio", "Dati salvati con successo!", "success"); setDirty(false); saveSuccessful = true;
             } catch (error) { showToast("Errore Salvataggio", `Impossibile salvare: ${error.message}`, "danger"); saveSuccessful = false; }
             finally { setSaveButtonLoading(false); }
             return saveSuccessful;
         }
         function setSaveButtonLoading(isLoading) { const saveButton = document.getElementById('save-button'); if (isLoading) { saveButton.disabled = true; saveSpinner.style.display = 'inline-block'; } else { saveButton.disabled = false; saveSpinner.style.display = 'none'; } }
-
-        // --- Gestione Modifiche (Dirty Flag) ---
         function setDirty(state) { isDirty = state; saveButtonContainer.style.display = state ? 'block' : 'none'; }
-
-        // --- Gestione Righe (MODIFICATA) ---
         function addNewRow() {
-            const placeholder = tableBody.querySelector('td[colspan]');
-            if (placeholder) { tableBody.innerHTML = ''; }
+            const placeholder = tableBody.querySelector('td[colspan]'); if (placeholder) { tableBody.innerHTML = ''; }
             const emptyTest = {}; COLUMNS.forEach(key => { emptyTest[key] = (key === 'Active') ? true : (key === 'Device' ? 'web' : ''); });
-            // Inizializza il task come stringa vuota
-            emptyTest.Task = ''; 
-            emptyTest.TestID = `TEST_CASE_${tableBody.rows.length + 1}`;
-            createRow(emptyTest);
+            emptyTest.Task = ''; emptyTest.TestID = `TEST_CASE_${tableBody.rows.length + 1}`; createRow(emptyTest);
             const newRowElement = tableBody.lastChild; if (newRowElement) { newRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); const testIdCell = newRowElement.querySelector('.testid-cell'); if (testIdCell) { testIdCell.focus(); document.execCommand('selectAll', false, null); } } setDirty(true);
         }
         function deleteRow(deleteIcon) { if (confirm("Sei sicuro di voler eliminare questa riga?")) { const tr = deleteIcon.closest('tr'); if (tr) tr.remove(); setDirty(true); if (tableBody.rows.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case...</td></tr>'; } } }
-
-        // --- Esecuzione Test (CON SALVATAGGIO AUTOMATICO E STOP) ---
         async function runTests() {
             if (isDirty) {
                 if (confirm("Hai modifiche non salvate. Vuoi salvarle prima di avviare i test?")) {
                     const saveSuccessful = await saveData();
-                    if (!saveSuccessful) {
-                        showToast("Errore", "Salvataggio fallito. Impossibile avviare i test.", "danger"); return;
-                    }
+                    if (!saveSuccessful) { showToast("Errore", "Salvataggio fallito. Impossibile avviare i test.", "danger"); return; }
                 } else { showToast("Annullato", "Esecuzione test annullata (modifiche non salvate).", "warning"); return; }
             }
             try {
                 const statusRes = await fetch('/api/test-status'); const statusData = await statusRes.json();
                 if (statusData.status === 'running') { showToast("Errore", "Un test è già in esecuzione.", "danger"); outputModal.show(); return; }
             } catch (e) { showToast("Errore", `Impossibile contattare il server: ${e.message}`, "danger"); return; }
-
-            outputLog.textContent = 'Avvio del processo di test...';
-            outputModal.show();
+            outputLog.textContent = 'Avvio del processo di test...'; outputModal.show();
             runTestButton.disabled = true; runSpinner.style.display = 'inline-block';
             stopTestButton.style.display = 'inline-block'; stopTestButton.disabled = false;
             try {
@@ -347,8 +207,6 @@
                 stopTestButton.innerHTML = '<i class="bi bi-stop-circle-fill"></i> STOP ESECUZIONE';
             }
         }
-
-        // --- Funzione STOP TEST ---
         async function stopTests() {
             if (!confirm("Sei sicuro di voler terminare l'esecuzione del test in corso?")) { return; }
             stopTestButton.disabled = true; stopTestButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Interruzione...';
@@ -361,11 +219,7 @@
                 stopTestButton.disabled = false; stopTestButton.innerHTML = '<i class="bi bi-stop-circle-fill"></i> STOP ESECUZIONE';
             }
         }
-
-        // --- Gestione Upload (invariata) ---
         async function uploadFile(file) { const formData = new FormData(); formData.append('file', file); const uploadButton = document.getElementById('upload-trigger-button'); uploadButton.disabled = true; uploadButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Caricamento...'; try { const response = await fetch('/api/upload-excel', { method: 'POST', body: formData }); const result = await response.json(); if (!response.ok || result.error) { throw new Error(result.error || response.statusText); } showToast("Upload", `File "${result.filename}" caricato.`, "success"); currentFile = result.filename; await loadExcelFiles(); await loadData(); } catch (error) { showToast("Errore Upload", `Impossibile caricare: ${error.message}`, "danger"); } finally { uploadButton.disabled = false; uploadButton.innerHTML = '<i class="bi bi-upload"></i> Carica Nuovo'; } }
-
-        // --- Utility Notifica (Toast) (invariata) ---
         function showToast(title, body, type = 'success') { const toastTitle = document.getElementById('toast-title'); const toastBody = document.getElementById('toast-body'); toastTitle.textContent = title; toastBody.textContent = body; toastElement.classList.remove('text-bg-success', 'text-bg-danger'); if (type === 'success') { toastElement.classList.add('text-bg-success'); } else if (type === 'danger') { toastElement.classList.add('text-bg-danger'); } bsToast.show(); }
     </script>
 </body>

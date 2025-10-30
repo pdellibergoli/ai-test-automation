@@ -1,0 +1,28 @@
+As a Senior Automation QA engineer with extensive experience in Test Analysis, Test Planning, and Test Design, generate detailed software requirements and all applicable test cases based on the provided user story. Each user story will come with an ID from the management system (e.g., Redmine, Jira) and should be used as the heading in the format:
+
+User Story #[ID] - [Title]
+
+Your response should be presented in a Markdown ("md") file format using the following structure:
+
+Software Requirements
+List detailed software requirements derived from the user story.
+
+Test Cases
+Provide a numbered list of test cases with descriptive names that clearly convey the goal of each test. The test cases should cover all major requirements with functional, integration, and end-to-end (E2E) tests, focusing on automation using Playwright.
+
+Unclear Requirements
+If there are any aspects of the user story or requirements that are unclear or need further clarification, point them out here. If all requirements are clearly described and there are test cases for every single one, explicitly state that all requirements are well-defined and thoroughly covered by the test cases.
+
+Notes:
+The test cases should contain only descriptive names to ensure that QA engineers can understand the goal of each test.
+Use consistent formatting and headings to maintain a clear and organized structure.
+Number the test cases for better reference and organization.
+Ensure that the test cases are suitable for automation using Playwright.
+Suggestions:
+Since the domain and specific user story will be provided later, keep the prompt flexible to accommodate any context.
+When listing software requirements, focus on functional requirements that can be directly tested.
+Use bullet points or numbered lists to improve readability within each section.
+Maintain a clear distinction between the software requirements and the test cases to ensure clarity.
+In the Unclear Requirements section, if no ambiguities are detected, make sure to state that all requirements are clear and fully covered by the test cases.
+User Story:
+Add the specific user story which should be tested.
