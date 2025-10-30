@@ -1,210 +1,399 @@
-# AI Test Automation Framework
+# 🤖 AI Test Automation Framework
 
-Framework unificato per test automation con AI agents, che supporta sia test **mobile** (iOS/Android) che **web** (browser).
+<div align="center">
 
-Ora include una **interfaccia web completa** per la gestione, l'esecuzione e la generazione di test case.
+**Framework unificato di test automation powered by AI**  
+Supporto completo per test **Mobile** (iOS/Android) e **Web** (Browser)
 
-## 🚀 Features Principali
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Appium](https://img.shields.io/badge/Appium-Ready-purple.svg)](http://appium.io/)
 
-- ✨ **Web UI Integrata**: Una pagina Home per navigare tra le funzionalità principali.
-- 📝 **Editor Test Case Web**: Un editor visuale per creare, modificare, eliminare e gestire i test case nei tuoi file Excel.
-- 🤖 **Generatore Test Case AI**: Una pagina dedicata per caricare file di requisiti e generare automaticamente nuovi test case usando l'AI.
-- ▶️ **Esecuzione Web**: Avvia e ferma le esecuzioni dei test direttamente dal browser, visualizzando i log in tempo reale.
-- 📊 **Visualizzatore Report**: Sfoglia, apri ed elimina i report HTML delle esecuzioni passate.
-- 📱 **Test Mobili**: Supporto completo per iOS e Android tramite Appium.
-- 🌐 **Test Web**: Automazione browser tramite Browser-Use.
-- ☁️ **Cloud Support**: Integrazione con LambdaTest per testing su cloud.
+</div>
 
-## 📋 Requisiti
+---
 
-### Software
-- Python 3.11+
-- Node.js (per Appium, se si eseguono test mobile)
-- Appium Server (se si eseguono test mobile locali)
-- Browser Chromium/Chrome
+## ✨ Caratteristiche Principali
 
-### Installazione Dipendenze
+<table>
+<tr>
+<td width="50%">
 
-1.  **Crea Ambiente Virtuale**
-    ```bash
-    python -m venv .venv
-    ```
+### 🎨 Interfaccia Web Completa
+- **Home Dashboard** intuitiva
+- **Editor Visuale** per test case
+- **Generatore AI** integrato
+- **Esecuzione in tempo reale**
+- **Report interattivi**
 
-2.  **Attiva Ambiente**
-    ```bash
-    # Windows
-    .venv\Scripts\activate
-    # Mac/Linux
-    source .venv/bin/activate
-    ```
+</td>
+<td width="50%">
 
-3.  **Installa Dipendenze Python**
-    (Include `Flask`, `pandas`, `langchain`, `google-generativeai`, `appium-python-client`, ecc.)
-    ```bash
-    pip install -r requirements.txt
-    ```
+### 🚀 Testing Avanzato
+- **Test Mobile** iOS & Android
+- **Test Web** multi-browser
+- **Cloud Testing** con LambdaTest
+- **Log in tempo reale**
+- **Screenshot automatici**
 
-4.  **Installa Dipendenze Web/Mobile (Necessarie per `main_runner.py`)**
-    ```bash
-    # Installa Playwright (per test web)
-    playwright install chromium --with-deps
+</td>
+</tr>
+</table>
 
-    # Installa Appium (per test mobile)
-    npm install -g appium
-    appium driver install uiautomator2  # Android
-    # appium driver install xcuitest      # iOS
-    ```
+---
 
-## ⚙️ Configurazione
+## 📸 Screenshots
 
-### 1. File .env
+```
+┌─────────────────────────────────────────────┐
+│  🏠 Home  →  📝 Editor  →  🤖 Generator     │
+│            ↓                                 │
+│         ▶️ Execute  →  📊 Reports           │
+└─────────────────────────────────────────────┘
+```
 
-Crea un file `.env` nella root del progetto copiando `.env.example`.
+---
 
-**L'unica variabile obbligatoria per iniziare è una chiave API per l'IA:**
+## 🎯 Quick Start
+
+### 1️⃣ Setup Ambiente
 
 ```bash
-# Esempio minimo per Google Gemini (raccomandato)
-GOOGLE_API_KEY=your_google_api_key
+# Clona il repository
+git clone https://github.com/yourusername/aitestautomation.git
+cd aitestautomation
 
-# ---
-# Puoi configurare quale LLM usare per l'esecuzione E la generazione
-# Opzioni: "gemini", "openai", "ollama"
-WEB_LLM_PROVIDER=gemini
-Assicurati che l'API key corrispondente (es. OPENAI_API_KEY se usi "openai") sia configurata.
+# Crea e attiva ambiente virtuale
+python -m venv .venv
 
-2. File Excel
-L'editor web gestirà automaticamente la creazione e la modifica dei file .xlsx nella cartella principale. La struttura richiesta è: TestID, Descrizione, Task, Active, Device, Execution, Platform, DeviceName, UDID, AppID, AppPackage, AppActivity
+# Windows
+.venv\Scripts\activate
 
-🎯 Utilizzo (Metodo Consigliato: Interfaccia Web)
-Avvia l'interfaccia web completa con un singolo comando.
+# Mac/Linux
+source .venv/bin/activate
 
-1. Avvia il Web Server
-Bash
+# Installa dipendenze
+pip install -r requirements.txt
+```
 
-# Assicurati che il tuo ambiente .venv sia attivo
+### 2️⃣ Configura API Keys
+
+Crea un file `.env` nella root del progetto:
+
+```bash
+# Gemini (Raccomandato - Free Tier disponibile)
+GOOGLE_API_KEY=your_google_api_key_here
+
+# Opzionale: Altri provider
+# OPENAI_API_KEY=your_openai_key
+# OLLAMA_BASE_URL=http://localhost:11434
+
+# Configurazione LLM
+WEB_LLM_PROVIDER=gemini  # Opzioni: gemini, openai, ollama
+```
+
+### 3️⃣ Installa Driver (per test mobile/web)
+
+```bash
+# Browser automation
+playwright install chromium --with-deps
+
+# Mobile automation (se necessario)
+npm install -g appium
+appium driver install uiautomator2  # Android
+appium driver install xcuitest      # iOS (solo su Mac)
+```
+
+### 4️⃣ Avvia il Framework! 🎉
+
+```bash
 python web_editor.py
-Il tuo browser si aprirà automaticamente su http://127.0.0.1:5000.
+```
 
-2. Pagina Home
-Verrai accolto da una pagina iniziale dove potrai scegliere tra:
+Il browser si aprirà automaticamente su `http://127.0.0.1:5000`
 
-Editor Test Case: Per gestire ed eseguire i test.
+---
 
-Genera Test Case: Per creare nuovi test da requisiti.
+## 🎨 Interfaccia Web
 
-Vedi Report Esecuzioni: Per visualizzare lo storico dei report.
+### 🏠 Home Dashboard
+Punto di partenza per tutte le operazioni:
+- **Editor Test Case**: Gestisci i tuoi test
+- **Genera Test Case**: Crea test con l'AI
+- **Vedi Report**: Analizza le esecuzioni
 
-3. Editor Test Case (/editor)
-Gestisci File: Seleziona file .xlsx esistenti o carica nuovi file dal tuo computer.
+### 📝 Editor Test Case (`/editor`)
 
-Modifica Live: Clicca su qualsiasi cella per modificarne il contenuto. Il testo lungo è gestito correttamente.
+| Feature | Descrizione |
+|---------|-------------|
+| **Gestione File** | Carica, crea, e seleziona file Excel |
+| **Modifica Live** | Click su cella per editing immediato |
+| **Toggle Active** | Checkbox per abilitare/disabilitare test |
+| **Aggiungi/Rimuovi** | Icone intuitive per gestire righe |
+| **Esecuzione** | Avvia test con log in tempo reale |
+| **Stop Immediato** | Interrompi esecuzione in qualsiasi momento |
 
-Attiva/Disattiva: Usa le checkbox Active per decidere quali test eseguire.
+### 🤖 Generatore AI (`/generate`)
 
-Aggiungi/Elimina: Aggiungi nuove righe o eliminale con le icone <i class="bi bi-trash-fill"></i> e <i class="bi bi-plus-lg"></i>.
+```
+1. Carica file requisiti   →  2. Seleziona prompt
+                ↓
+3. Clicca "Genera"  →  4. Monitora progresso
+                ↓
+5. Scarica CSV      →  6. Importa nell'editor
+```
 
-Esegui Test:
+**Features**:
+- Log in tempo reale della generazione
+- Interruzione sicura del processo
+- Export diretto in formato CSV
+- Memorizzazione ultimo prompt usato
 
-Clicca <i class="bi bi-play-fill"></i> Avvia Test.
+### 📊 Report Viewer (`/reports`)
+- Lista cronologica di tutte le esecuzioni
+- Apertura diretta dei report HTML
+- Eliminazione report obsoleti
+- Filtri e ricerca integrati
 
-Se hai modifiche non salvate, ti verrà chiesto di salvarle.
+---
 
-L'output del terminale apparirà in una finestra modale.
+## 📁 Struttura Progetto
 
-Puoi fermare l'esecuzione in qualsiasi momento con il pulsante STOP.
-
-4. Generatore di Test (/generate)
-Carica Input: Carica un file di requisiti (es. requisiti.txt) e un file di prompt (es. prompt_costruisci_test.txt).
-
-Seleziona: I file caricati appaiono nei menu a tendina (l'ultimo prompt usato viene memorizzato).
-
-Genera: Clicca <i class="bi bi-magic"></i> Genera Test Case.
-
-Log in Tempo Reale: Vedrai i log dell'IA mentre lavora.
-
-Interrompi: Puoi fermare la generazione con il pulsante STOP.
-
-Scarica: I risultati appaiono in una tabella, pronti per essere scaricati come file .csv.
-
-📁 Struttura Progetto (Aggiornata)
+```
 aitestautomation/
 │
-├── 🚀 CORE FILES
-│   ├── web_editor.py             # Entry point NUOVO (Avvia server web)
-│   ├── main_runner.py            # Entry point Esecuzione Test (usato da web_editor)
-│   ├── dati_test.xlsx            # File Excel di default
-│   ├── .env                      # Configurazione (GIT IGNORED)
-│   └── requirements.txt          # Dipendenze Python
+├── 🚀 CORE
+│   ├── web_editor.py           # ⭐ Entry point principale
+│   ├── main_runner.py          # Test execution engine
+│   ├── dati_test.xlsx          # Template file Excel
+│   ├── .env                    # Configurazione (gitignored)
+│   └── requirements.txt        # Dipendenze Python
 │
-├── 📁 templates/                
-│   ├── home.html                 # Pagina iniziale
-│   ├── index.html                # Editor Test Case
-│   ├── generate_tests.html       # Pagina Generazione Test
-│   └── reports.html              # Pagina Elenco Report
+├── 🎨 FRONTEND
+│   └── templates/
+│       ├── home.html           # Dashboard principale
+│       ├── index.html          # Editor test case
+│       ├── generate_tests.html # Generatore AI
+│       └── reports.html        # Viewer report
 │
-├── 🧪 tests/
-│   ├── test_generator.py         # Classe per generare test da AI
-│   ├── mobile_test_executor.py   # Executor test mobile
-│   └── web_test_executor.py      # Executor test web
+├── 🧪 TEST ENGINE
+│   └── tests/
+│       ├── test_generator.py       # AI test generation
+│       ├── mobile_test_executor.py # Mobile automation
+│       └── web_test_executor.py    # Web automation
 │
-├── 🛠️ utilities/
-│   ├── excel_utils.py            # Lettura Excel
-│   ├── report_utils.py           # Generazione report HTML
-│   └── ...                       # Altre utility
+├── 🛠️ UTILITIES
+│   └── utilities/
+│       ├── excel_utils.py      # Excel I/O operations
+│       ├── report_utils.py     # HTML report generation
+│       └── ...                 # Altri helper
 │
-├── 📊 reports/
-│   └── unified/                  # Report HTML generati
+├── 📊 OUTPUT
+│   ├── reports/unified/        # Report HTML generati
+│   └── screen/                 # Screenshot test failures
 │
-└── 🖼️ screen/                   # Screenshot dei test
-🔧 Troubleshooting
-Problema: ModuleNotFoundError: No module named 'pandas' (o flask)
-Soluzione: L'ambiente virtuale non è attivo.
+└── 📚 DOCS
+    └── docs/                   # Documentazione aggiuntiva
+```
 
-Ferma il server (CTRL+C).
+---
 
-Attiva l'ambiente: .venv\Scripts\activate (Windows) o source .venv/bin/activate (Mac/Linux).
+## 📋 Requisiti Sistema
 
-Installa le dipendenze: pip install -r requirements.txt.
+### Software Necessario
 
-Riavvia il server: python web_editor.py.
+| Component | Versione | Scopo |
+|-----------|----------|-------|
+| **Python** | 3.11+ | Runtime principale |
+| **Node.js** | Latest LTS | Appium Server |
+| **Chromium** | Latest | Web testing |
+| **Appium** | 2.0+ | Mobile testing |
 
-Problema: TemplateNotFound: home.html (o index.html)
-Soluzione: Il server non trova i file HTML. Assicurati che i file home.html, index.html, generate_tests.html, e reports.html si trovino in una cartella chiamata templates allo stesso livello di web_editor.py.
+### File Excel - Struttura Colonne
 
-Problema: L'interfaccia web non si aggiorna dopo le modifiche al codice
-Soluzione: Il tuo browser sta usando una vecchia versione in cache.
+```
+TestID | Descrizione | Task | Active | Device | Execution | Platform
+DeviceName | UDID | AppID | AppPackage | AppActivity
+```
 
-Assicurati che il server web_editor.py sia in esecuzione (l'ultima versione disabilita la cache).
+> 💡 **Tip**: L'editor web crea automaticamente la struttura corretta!
 
-Svuota la cache del browser o fai un Hard Refresh (Ctrl+Shift+R su Windows, Cmd+Shift+R su Mac).
+---
 
-Prova in una finestra di navigazione in incognito.
+## 🎓 Guida d'Uso
 
-Problema: UnicodeEncodeError (caratteri strani nel terminale)
-Soluzione: (Solo per Windows) Il terminale non gestisce i caratteri UTF-8.
+### Workflow Tipico
 
-Azione: Rimuovi i caratteri speciali (come emoji ✅ o banner ╔═══╗) dai file Python (config_manager.py, main_runner.py).
+```mermaid
+graph LR
+    A[Requisiti] -->|Upload| B[Generatore AI]
+    B -->|CSV| C[Editor]
+    C -->|Salva| D[File Excel]
+    D -->|Esegui| E[Test Runner]
+    E -->|Report| F[Visualizzatore]
+```
 
-Alternativa: Avvia python con il flag -X utf8: python -X utf8 web_editor.py.
+### Esempio: Creare un Test da Zero
 
-📞 Supporto
-📧 Email: pasquale.dellibergoli91@gmail.com
+1. **Genera con AI**:
+   - Vai su "Genera Test Case"
+   - Carica `requisiti.txt`
+   - Seleziona `prompt_costruisci_test.txt`
+   - Click "Genera" e attendi
 
-📖 Docs: Vedi cartella docs/.
+2. **Modifica nell'Editor**:
+   - Apri il CSV generato
+   - Affina le descrizioni
+   - Imposta `Active=TRUE`
 
-📄 Licenza
-MIT License
+3. **Esegui**:
+   - Click "Avvia Test"
+   - Monitora log in tempo reale
+   - Controlla screenshot in caso di errori
 
-🙏 Riconoscimenti
-Browser-Use
+4. **Analizza Report**:
+   - Vai su "Vedi Report"
+   - Apri il report HTML
+   - Analizza metriche e failures
 
-App-Use
+---
 
-Appium
+## 🔧 Troubleshooting
 
-Flask
+<details>
+<summary><b>❌ ModuleNotFoundError: No module named 'pandas'</b></summary>
 
-Pandas
+**Causa**: Ambiente virtuale non attivo
 
-Made with ❤️ by Pasquale Delli Bergoli
+**Soluzione**:
+```bash
+# Windows
+.venv\Scripts\activate
+
+# Mac/Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
+python web_editor.py
+```
+</details>
+
+<details>
+<summary><b>❌ TemplateNotFound: home.html</b></summary>
+
+**Causa**: File HTML non trovati
+
+**Soluzione**:
+Verifica che la cartella `templates/` esista allo stesso livello di `web_editor.py` e contenga tutti i file HTML.
+</details>
+
+<details>
+<summary><b>❌ Cache browser non aggiorna l'interfaccia</b></summary>
+
+**Soluzione**:
+```
+1. Hard Refresh: Ctrl+Shift+R (Windows) / Cmd+Shift+R (Mac)
+2. Oppure: Apri finestra in incognito
+3. Oppure: Svuota cache browser
+```
+</details>
+
+<details>
+<summary><b>❌ UnicodeEncodeError su Windows</b></summary>
+
+**Soluzione**:
+```bash
+# Opzione 1: Avvia con UTF-8
+python -X utf8 web_editor.py
+
+# Opzione 2: Rimuovi emoji dai file .py
+# (cerca caratteri come ✅ 🚀 nei file config_manager.py, main_runner.py)
+```
+</details>
+
+<details>
+<summary><b>❌ Appium non trova il device</b></summary>
+
+**Soluzione Android**:
+```bash
+# Verifica dispositivo connesso
+adb devices
+
+# Abilita Developer Options + USB Debugging sul device
+```
+
+**Soluzione iOS**:
+```bash
+# Installa ios-deploy
+npm install -g ios-deploy
+
+# Verifica dispositivo
+idevice_id -l
+```
+</details>
+
+---
+
+## 🤝 Contribuire
+
+Contributi benvenuti! Per contribuire:
+
+1. Fork del repository
+2. Crea un branch (`git checkout -b feature/AmazingFeature`)
+3. Commit delle modifiche (`git commit -m 'Add AmazingFeature'`)
+4. Push del branch (`git push origin feature/AmazingFeature`)
+5. Apri una Pull Request
+
+---
+
+## 📚 Risorse
+
+- 📖 **Documentazione Completa**: Vedi cartella [`docs/`](docs/)
+- 🎥 **Video Tutorial**: [Coming Soon]
+- 💬 **Community**: [Discord/Slack Link]
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/yourusername/aitestautomation/issues)
+
+---
+
+## 🛠️ Stack Tecnologico
+
+| Categoria | Tecnologie |
+|-----------|------------|
+| **Backend** | Python, Flask |
+| **Testing** | Appium, Playwright, Browser-Use |
+| **AI/ML** | LangChain, Google Gemini, OpenAI |
+| **Data** | Pandas, Excel |
+| **Frontend** | Bootstrap 5, JavaScript |
+| **Cloud** | LambdaTest Integration |
+
+---
+
+## 📄 Licenza
+
+Questo progetto è rilasciato sotto licenza **MIT License** - vedi il file [LICENSE](LICENSE) per dettagli.
+
+---
+
+## 🙏 Ringraziamenti
+
+Un grazie speciale a:
+
+- [**Browser-Use**](https://github.com/browser-use/browser-use) - Web automation framework
+- [**App-Use**](https://github.com/app-use/app-use) - Mobile automation utilities
+- [**Appium**](https://appium.io/) - Cross-platform mobile testing
+- [**Flask**](https://flask.palletsprojects.com/) - Web framework
+- [**Pandas**](https://pandas.pydata.org/) - Data manipulation
+- [**LangChain**](https://www.langchain.com/) - AI orchestration
+
+---
+
+<div align="center">
+
+### Made with ❤️ by [Pasquale Delli Bergoli](mailto:pasquale.dellibergoli91@gmail.com)
+
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-black?logo=github)](https://github.com/yourusername)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/yourprofile)
+
+**⭐ Se ti piace questo progetto, lascia una star!**
+
+</div>
