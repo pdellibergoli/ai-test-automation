@@ -12,14 +12,12 @@ import time
 from io import BytesIO
 import shutil
 
-# Importa il TestGenerator
 try:
-    from tests.test_generator import TestGenerator
+    from tests.test_generator import TestGenerator # Lo importiamo ancora, ma l'API non lo userà più direttamente
 except ImportError:
-    print("ATTENZIONE: Impossibile importare TestGenerator. La funzione di generazione non sarà disponibile.", file=sys.stderr)
-    TestGenerator = None # Permette al server di avviarsi anche se l'import fallisce
+    print("ATTENZIONE: Impossibile importare TestGenerator.", file=sys.stderr)
+    TestGenerator = None
 
-# --- Configurazione ---
 app = Flask(__name__, template_folder='templates')
 project_root = Path(__file__).parent
 REPORTS_DIR = project_root / "reports" / "unified"
@@ -30,10 +28,10 @@ ALL_COLUMNS = [
     'Platform', 'DeviceName', 'UDID', 'AppID', 'AppPackage', 'AppActivity'
 ]
 test_process = None
+generation_process = None # --- NUOVA VARIABILE GLOBALE ---
 
-# --- Funzioni di Utility ---
+# ... (get_excel_file_path e check_excel_file invariate) ...
 def get_excel_file_path(filename: str) -> Path:
-    """Valida e restituisce un percorso sicuro per il file Excel locale."""
     if not filename: filename = "dati_test.xlsx"
     safe_filename = secure_filename(filename)
     if not safe_filename: abort(400, "Nome file non valido.")
@@ -41,38 +39,26 @@ def get_excel_file_path(filename: str) -> Path:
     if project_root != file_path.parent or file_path.suffix != '.xlsx':
         abort(400, "Nome file non valido o non consentito.")
     return file_path
-
 def check_excel_file(file_path: Path):
-    """Controlla se il file Excel locale esiste, altrimenti lo crea."""
     if not file_path.exists():
         print(f"⚠️  Creazione file vuoto locale: {file_path.name}")
         df_empty = pd.DataFrame(columns=ALL_COLUMNS)
         try: df_empty.to_excel(file_path, sheet_name=SHEET_NAME, index=False)
         except Exception as e: print(f"❌ Impossibile creare il file Excel locale: {e}")
 
-# --- Route per le Pagine HTML ---
+# --- Route HTML (invariate) ---
 @app.route('/')
-def index(): 
-    """Serve la pagina principale dell'editor."""
-    return render_template('index.html')
-
+def index(): return render_template('index.html')
 @app.route('/reports')
-def reports_page(): 
-    """Serve la pagina di elenco dei report."""
-    return render_template('reports.html')
-
+def reports_page(): return render_template('reports.html')
 @app.route('/generate')
-def generate_page():
-    """Serve la pagina di generazione test."""
-    return render_template('generate_tests.html')
-
+def generate_page(): return render_template('generate_tests.html')
 @app.route('/reports/view/<path:filepath>')
 def serve_report(filepath):
-    """Serve i file di report locali."""
     try:
         safe_path = REPORTS_DIR.joinpath(filepath).resolve()
         if not safe_path.is_file() or REPORTS_DIR not in safe_path.parents:
-            abort(404, "Report non trovato o accesso negato.")
+            abort(404, "Report non trovato.")
         directory, filename = safe_path.parent, safe_path.name
         return send_from_directory(directory, filename)
     except Exception: abort(404, "Report non trovato.")
@@ -81,48 +67,133 @@ def serve_report(filepath):
 
 @app.route('/api/excel-files', methods=['GET'])
 def get_excel_files():
-    """Elenca i file .xlsx locali nella root."""
     files = [f.name for f in project_root.glob('*.xlsx') if not f.name.startswith('~$')]
     files.sort(); return jsonify(files)
 
+@app.route('/api/input-files', methods=['GET'])
+def get_input_files():
+    files = []
+    for ext in ('*.txt', '*.md', '*.req'): files.extend(project_root.glob(ext))
+    file_names = sorted([f.name for f in files if not f.name.startswith('~$')])
+    return jsonify(file_names)
+
+@app.route('/api/upload-input-file', methods=['POST'])
+def upload_input_file():
+    if 'file' not in request.files: return jsonify({"error": "Nessun file inviato"}), 400
+    file = request.files['file']
+    if file.filename == '': return jsonify({"error": "File non selezionato"}), 400
+    filename = secure_filename(file.filename)
+    if not filename.endswith(('.txt', '.md', '.req', '.prompt')):
+        return jsonify({"error": "File non valido. Seleziona un file .txt, .md, .req, o .prompt."}), 400
+    try:
+        file_path = (project_root / filename).resolve()
+        if file_path.parent != project_root: abort(400, "Percorso file non valido.")
+        file.save(file_path)
+        print(f"✅ File di input caricato localmente: {filename}")
+        return jsonify({"success": True, "filename": filename})
+    except Exception as e: return jsonify({"error": str(e)}), 500
+
+# --- API /api/generate-tests (MODIFICATA per SUBPROCESS) ---
 @app.route('/api/generate-tests', methods=['POST'])
 def api_generate_tests():
     """
-    Riceve i file caricati, chiama TestGenerator con il loro contenuto
-    e restituisce i casi di test strutturati in JSON.
+    Avvia test_generator.py come subprocess e restituisce l'output in streaming.
     """
-    if TestGenerator is None:
-        return jsonify({"error": "TestGenerator non è stato importato correttamente."}), 500
-        
-    if 'requirements_file' not in request.files or 'prompt_file' not in request.files:
-        return jsonify({"error": "Entrambi i file (requisiti e prompt) sono necessari."}), 400
+    global generation_process
+    if generation_process and generation_process.poll() is None:
+        return Response("Una generazione è già in corso.", status=409)
 
-    req_file = request.files['requirements_file']
-    prompt_file = request.files['prompt_file']
-
-    if req_file.filename == '' or prompt_file.filename == '':
-        return jsonify({"error": "File non selezionati."}), 400
+    data = request.json
+    req_file_name = data.get('requirements_file')
+    prompt_file_name = data.get('prompt_file')
+    
+    if not req_file_name or not prompt_file_name:
+        return Response("File requisiti e file prompt sono necessari.", status=400)
 
     try:
-        req_content = req_file.stream.read().decode('utf-8')
-        prompt_content = prompt_file.stream.read().decode('utf-8')
+        req_file_safe = secure_filename(req_file_name)
+        prompt_file_safe = secure_filename(prompt_file_name)
         
-        print(f"🤖 Avvio TestGenerator con file caricati: {req_file.filename} e {prompt_file.filename}")
-        generator = TestGenerator()
-        test_cases = generator.generate_tests(req_content, prompt_content)
+        if not (project_root / req_file_safe).exists():
+             return Response(f"File requisiti non trovato: {req_file_safe}", status=404)
+        if not (project_root / prompt_file_safe).exists():
+             return Response(f"File prompt non trovato: {prompt_file_safe}", status=404)
         
-        print(f"✅ Generati {len(test_cases)} casi di test.")
-        return jsonify(test_cases)
+        # Prepara il comando
+        python_exe = sys.executable
+        generator_script = str(project_root / 'tests' / 'test_generator.py')
+        cmd = [
+            python_exe, 
+            generator_script, 
+            '--req-file', req_file_safe, 
+            '--prompt-file', prompt_file_safe
+        ]
         
+        print(f"🤖 Avvio subprocess TestGenerator: {' '.join(cmd)}")
+
+        def generate_output():
+            global generation_process
+            try:
+                generation_process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT, # Unisci stdout e stderr per i log
+                    text=True,
+                    encoding='utf-8',
+                    bufsize=1,
+                    cwd=project_root
+                )
+                
+                yield "--- 🚀 Avvio generazione... (L'output JSON apparirà alla fine) ---\n\n"
+                
+                for line in iter(generation_process.stdout.readline, ''):
+                    yield line # Invia i log (da stderr) E l'output JSON (da stdout)
+                    time.sleep(0.01)
+                
+                generation_process.stdout.close()
+                return_code = generation_process.wait()
+                if return_code == 0:
+                    yield f"\n\n--- ✅ Generazione terminata ---"
+                else:
+                    yield f"\n\n--- ❌ Generazione fallita (Codice: {return_code}) ---"
+                    
+            except Exception as e:
+                yield f"\n\n--- ❌ ERRORE: Impossibile avviare il processo: {e} ---"
+            finally:
+                generation_process = None
+
+        return Response(stream_with_context(generate_output()), mimetype='text/plain')
+
     except Exception as e:
-        print(f"❌ Errore durante la generazione dei test: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Errore avvio generazione: {e}", file=sys.stderr)
+        return Response(f"Errore interno: {e}", status=500)
+# --- FINE MODIFICA API ---
+
+# --- NUOVA API PER STOP GENERAZIONE ---
+@app.route('/api/stop-generation', methods=['POST'])
+def stop_generation():
+    """Termina il processo di generazione test in esecuzione."""
+    global generation_process
+    if generation_process and generation_process.poll() is None:
+        try:
+            generation_process.terminate()
+            generation_process.wait(timeout=2) 
+            print("⛔ Processo di generazione terminato dall'utente.")
+            return jsonify({"success": True, "message": "Processo terminato."})
+        except subprocess.TimeoutExpired:
+            generation_process.kill()
+            print("⛔ Processo di generazione forzato a terminare (kill).")
+            return jsonify({"success": True, "message": "Processo terminato forzatamente."})
+        except Exception as e:
+            print(f"❌ Errore durante l'interruzione: {e}")
+            return jsonify({"success": False, "message": str(e)}), 500
+    else:
+        return jsonify({"success": False, "message": "Nessun processo in esecuzione."}), 404
+# --- FINE NUOVA API ---
+
 
 @app.route('/api/upload-excel', methods=['POST'])
 def upload_excel():
-    """Salva un file Excel caricato nella cartella locale del progetto."""
     if 'file' not in request.files: return jsonify({"error": "Nessun file inviato"}), 400
     file = request.files['file']
     if file.filename == '': return jsonify({"error": "File non selezionato"}), 400
@@ -137,7 +208,6 @@ def upload_excel():
 
 @app.route('/api/reports', methods=['GET'])
 def get_reports_list():
-    """Elenca i report locali."""
     report_list = []
     if not REPORTS_DIR.exists(): return jsonify([])
     for dir_path in REPORTS_DIR.iterdir():
@@ -150,7 +220,6 @@ def get_reports_list():
 
 @app.route('/api/reports/<folder_name>', methods=['DELETE'])
 def delete_report_folder(folder_name):
-    """Elimina una cartella specifica all'interno di REPORTS_DIR."""
     try:
         safe_folder_name = secure_filename(folder_name)
         if not safe_folder_name or safe_folder_name != folder_name: abort(400, "Nome cartella non valido.")
@@ -165,7 +234,6 @@ def delete_report_folder(folder_name):
 
 @app.route('/api/tests', methods=['GET'])
 def get_tests():
-    """Legge un file Excel locale e gestisce errori di colonna."""
     filename = request.args.get('file', 'dati_test.xlsx')
     file_path = get_excel_file_path(filename)
     check_excel_file(file_path)
@@ -193,7 +261,6 @@ def get_tests():
 
 @app.route('/api/tests', methods=['POST'])
 def save_tests():
-    """Salva un file Excel localmente."""
     filename = request.args.get('file', 'dati_test.xlsx')
     file_path = get_excel_file_path(filename)
     try:
@@ -205,13 +272,12 @@ def save_tests():
     except Exception as e:
         print(f"❌ Errore salvataggio file locale: {e}"); return jsonify({"error": str(e)}), 500
 
-# --- API PER ESECUZIONE TEST ---
+# --- API ESECUZIONE E STOP (invariate) ---
 @app.route('/api/test-status', methods=['GET'])
 def get_test_status():
     global test_process
     if test_process and test_process.poll() is None: return jsonify({"status": "running"})
     return jsonify({"status": "idle"})
-
 @app.route('/api/run-tests', methods=['POST'])
 def run_tests():
     global test_process
@@ -238,10 +304,8 @@ def run_tests():
         except Exception as e: yield f"\n\n--- ❌ ERRORE: Impossibile avviare il processo: {e} ---"
         finally: test_process = None
     return Response(stream_with_context(generate_output()), mimetype='text/plain')
-
 @app.route('/api/stop-tests', methods=['POST'])
 def stop_tests():
-    """Termina il processo di test in esecuzione."""
     global test_process
     if test_process and test_process.poll() is None:
         try:
@@ -258,6 +322,14 @@ def stop_tests():
     else:
         return jsonify({"success": False, "message": "Nessun processo in esecuzione."}), 404
 
+# --- Cache Busting ---
+@app.after_request
+def add_cache_busting_headers(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 # --- Avvio del Server ---
 def open_browser():
     def _open(): webbrowser.open_new("http://127.0.0.1:5000/")
@@ -267,6 +339,7 @@ if __name__ == '__main__':
     Path('templates').mkdir(exist_ok=True)
     print(f"\n🚀 Avvio Test Editor su http://127.0.0.1:5000")
     print("   L'editor ora legge e scrive file locali.")
+    print("   La cache del browser e' disabilitata forzatamente.")
     print("   Premi CTRL+C per fermare il server.")
     open_browser()
     app.run(host='127.0.0.1', port=5000, debug=False)
