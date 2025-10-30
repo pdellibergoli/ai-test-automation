@@ -56,7 +56,12 @@
             flex-grow: 1; overflow-y: auto; background: #111; color: #eee; font-family: 'Courier New', Courier, monospace;
         }
         #test-output-log {
-             white-space: pre-wrap; word-wrap: break-word; font-size: 0.9rem; /* height e overflow rimossi */
+             white-space: pre-wrap; word-wrap: break-word; font-size: 0.9rem;
+        }
+        
+        /* Nasconde il pulsante STOP di default */
+        #stop-test-button {
+            display: none;
         }
     </style>
 </head>
@@ -112,10 +117,11 @@
     </div>
 
     <div class="modal fade" id="test-output-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-scrollable"> <div class="modal-content">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="modal-title">
-                <div class="spinner-border spinner-border-sm text-success me-2" id="run-spinner" style="display: none;"></div>
+                <div class="spinner-border spinner-border-sm text-success me-2" id="run-spinner" role="status" style="display: none;"></div>
                 Esecuzione Test
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -123,7 +129,9 @@
           <div class="modal-body">
             <pre id="test-output-log">Pronto per avviare i test...</pre>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer justify-content-between"> <button type="button" class="btn btn-danger" id="stop-test-button" onclick="stopTests()">
+                <i class="bi bi-stop-circle-fill"></i> STOP ESECUZIONE
+            </button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
           </div>
         </div>
@@ -146,6 +154,8 @@
         const outputModal = new bootstrap.Modal(outputModalElement);
         const outputLog = document.getElementById('test-output-log');
         const runSpinner = document.getElementById('run-spinner');
+        
+        const stopTestButton = document.getElementById('stop-test-button'); // NUOVA variabile
 
         let isDirty = false;
         let currentFile = 'dati_test.xlsx';
@@ -187,7 +197,6 @@
             tr.dataset.id = rowId;
             const taskText = testData['Task'] || '';
             const isTaskLong = taskText.length > TASK_TRUNCATE_LENGTH || taskText.includes('\n');
-
             const actionTd = document.createElement('td');
             actionTd.className = 'action-cell';
             const iconContainer = document.createElement('div');
@@ -210,7 +219,6 @@
             }
             actionTd.appendChild(iconContainer);
             tr.appendChild(actionTd);
-
             COLUMNS.forEach(key => {
                 const td = document.createElement('td');
                 td.dataset.key = key;
@@ -221,62 +229,30 @@
             tableBody.appendChild(tr);
         }
 
-        function toggleRowExpand(icon) {
-            const tr = icon.closest('tr');
-            if (tr) { tr.classList.toggle('expanded'); }
-        }
+        function toggleRowExpand(icon) { const tr = icon.closest('tr'); if (tr) { tr.classList.toggle('expanded'); } }
 
         // --- Salvataggio Dati (RESTITUISCE BOOLEANO) ---
         async function saveData() {
-            setSaveButtonLoading(true);
-            const data = [];
-            const rows = tableBody.querySelectorAll('tr');
-            let saveSuccessful = false; // Flag per il risultato
-
+            setSaveButtonLoading(true); const data = []; const rows = tableBody.querySelectorAll('tr');
+            let saveSuccessful = false;
             try {
                 let hasEmptyTestID = false;
                 rows.forEach(tr => {
-                    if (tr.querySelector('td[colspan]')) return;
-                    const rowData = {};
-                    tr.querySelectorAll('td[data-key]').forEach(td => {
-                        const key = td.dataset.key;
-                        if (key === 'Active') { rowData[key] = td.querySelector('input[type="checkbox"]').checked; }
-                        else { rowData[key] = td.textContent; } // Non usare trim() qui
-                    });
-                    if (!rowData.TestID || rowData.TestID.trim() === '') {
-                        hasEmptyTestID = true;
-                        const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = 'red';
-                    } else {
-                        const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = '';
-                    }
+                    if (tr.querySelector('td[colspan]')) return; const rowData = {};
+                    tr.querySelectorAll('td[data-key]').forEach(td => { const key = td.dataset.key; if (key === 'Active') { rowData[key] = td.querySelector('input[type="checkbox"]').checked; } else { rowData[key] = td.textContent; } });
+                    if (!rowData.TestID || rowData.TestID.trim() === '') { hasEmptyTestID = true; const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = 'red'; } else { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; }
                     data.push(rowData);
                 });
-
                 if (hasEmptyTestID) { throw new Error("Tutti i 'TestID' sono obbligatori."); }
                 rows.forEach(tr => { const testIdCell = tr.querySelector('.testid-cell'); if(testIdCell) testIdCell.style.backgroundColor = ''; });
-
-                const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    const errorResult = await response.json();
-                    throw new Error(errorResult.error || response.statusText);
-                }
-
+                const response = await fetch(`/api/tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (!response.ok) { const errorResult = await response.json(); throw new Error(errorResult.error || response.statusText); }
                 showToast("Salvataggio", "Dati salvati con successo!", "success");
-                setDirty(false); // Resetta il flag
-                saveSuccessful = true; // Imposta il flag di successo
-
-            } catch (error) {
-                showToast("Errore Salvataggio", `Impossibile salvare: ${error.message}`, "danger");
-                saveSuccessful = false; // Imposta il flag di fallimento
-            } finally {
-                setSaveButtonLoading(false);
-            }
-            return saveSuccessful; // Restituisce il risultato del salvataggio
+                setDirty(false);
+                saveSuccessful = true;
+            } catch (error) { showToast("Errore Salvataggio", `Impossibile salvare: ${error.message}`, "danger"); saveSuccessful = false; }
+            finally { setSaveButtonLoading(false); }
+            return saveSuccessful;
         }
         function setSaveButtonLoading(isLoading) { const saveButton = document.getElementById('save-button'); if (isLoading) { saveButton.disabled = true; saveSpinner.style.display = 'inline-block'; } else { saveButton.disabled = false; saveSpinner.style.display = 'none'; } }
 
@@ -287,22 +263,16 @@
         function addNewRow() { const placeholder = tableBody.querySelector('td[colspan]'); if (placeholder) { tableBody.innerHTML = ''; } const emptyTest = {}; COLUMNS.forEach(key => { emptyTest[key] = (key === 'Active') ? true : (key === 'Device' ? 'web' : ''); }); emptyTest.TestID = `TEST_CASE_${tableBody.rows.length + 1}`; createRow(emptyTest); const newRowElement = tableBody.lastChild; if (newRowElement) { newRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); const testIdCell = newRowElement.querySelector('.testid-cell'); if (testIdCell) { testIdCell.focus(); document.execCommand('selectAll', false, null); } } setDirty(true); }
         function deleteRow(deleteIcon) { if (confirm("Sei sicuro di voler eliminare questa riga?")) { const tr = deleteIcon.closest('tr'); if (tr) tr.remove(); setDirty(true); if (tableBody.rows.length === 0) { tableBody.innerHTML = '<tr><td colspan="13" class="text-center p-4">Nessun test case...</td></tr>'; } } }
 
-        // --- Esecuzione Test (CON SALVATAGGIO AUTOMATICO) ---
+        // --- Esecuzione Test (CON SALVATAGGIO AUTOMATICO E STOP) ---
         async function runTests() {
             if (isDirty) {
                 if (confirm("Hai modifiche non salvate. Vuoi salvarle prima di avviare i test?")) {
                     const saveSuccessful = await saveData();
                     if (!saveSuccessful) {
-                        showToast("Errore", "Salvataggio fallito. Impossibile avviare i test.", "danger");
-                        return;
+                        showToast("Errore", "Salvataggio fallito. Impossibile avviare i test.", "danger"); return;
                     }
-                    // Se salvataggio ok, isDirty è false, si procede
-                } else {
-                    showToast("Annullato", "Esecuzione test annullata (modifiche non salvate).", "warning");
-                    return;
-                }
+                } else { showToast("Annullato", "Esecuzione test annullata (modifiche non salvate).", "warning"); return; }
             }
-
             try {
                 const statusRes = await fetch('/api/test-status'); const statusData = await statusRes.json();
                 if (statusData.status === 'running') { showToast("Errore", "Un test è già in esecuzione.", "danger"); outputModal.show(); return; }
@@ -311,13 +281,54 @@
             outputLog.textContent = 'Avvio del processo di test...';
             outputModal.show();
             runTestButton.disabled = true; runSpinner.style.display = 'inline-block';
+            stopTestButton.style.display = 'inline-block'; // MOSTRA pulsante STOP
+            stopTestButton.disabled = false;
+
             try {
                 const response = await fetch(`/api/run-tests?file=${encodeURIComponent(currentFile)}`, { method: 'POST', });
                 if (!response.ok && response.headers.get('Content-Type')?.includes('text/plain')) { const errorText = await response.text(); outputLog.textContent += `\n\nERRORE SERVER (${response.status}): ${errorText}`; return; }
                 const reader = response.body.getReader(); const decoder = new TextDecoder(); outputLog.textContent = '';
-                while (true) { const { value, done } = await reader.read(); if (done) break; const chunk = decoder.decode(value, {stream: true}); outputLog.textContent += chunk; outputLog.scrollTop = outputLog.scrollHeight; }
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, {stream: true});
+                    outputLog.textContent += chunk; outputLog.scrollTop = outputLog.scrollHeight;
+                }
             } catch (error) { outputLog.textContent += `\n\nERRORE DI CONNESSIONE: ${error.message}`; }
-            finally { runTestButton.disabled = false; runSpinner.style.display = 'none'; }
+            finally {
+                runTestButton.disabled = false; runSpinner.style.display = 'none';
+                stopTestButton.style.display = 'none'; // NASCONDI pulsante STOP
+                stopTestButton.disabled = true;
+                stopTestButton.innerHTML = '<i class="bi bi-stop-circle-fill"></i> STOP ESECUZIONE'; // Resetta testo
+            }
+        }
+
+        // --- NUOVA FUNZIONE STOP TEST ---
+        async function stopTests() {
+            if (!confirm("Sei sicuro di voler terminare l'esecuzione del test in corso?")) {
+                return;
+            }
+            stopTestButton.disabled = true;
+            stopTestButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Interruzione...';
+
+            try {
+                const response = await fetch('/api/stop-tests', { method: 'POST' });
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || result.message || "Errore sconosciuto");
+                }
+                
+                showToast("Test Interrotto", "Il processo di test è stato terminato.", "warning");
+                // L'output stream nel modal si fermerà automaticamente e il
+                // blocco 'finally' di runTests() pulirà l'interfaccia.
+                
+            } catch (error) {
+                showToast("Errore", `Impossibile fermare il test: ${error.message}`, "danger");
+                // Ri-abilita il pulsante se lo stop fallisce (ma il processo potrebbe essere ancora attivo)
+                stopTestButton.disabled = false;
+                stopTestButton.innerHTML = '<i class="bi bi-stop-circle-fill"></i> STOP ESECUZIONE';
+            }
         }
 
         // --- Gestione Upload ---
