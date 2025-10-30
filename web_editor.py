@@ -12,12 +12,14 @@ import time
 from io import BytesIO
 import shutil
 
+# Importa il TestGenerator
 try:
-    from tests.test_generator import TestGenerator # Lo importiamo ancora, ma l'API non lo userà più direttamente
+    from tests.test_generator import TestGenerator
 except ImportError:
-    print("ATTENZIONE: Impossibile importare TestGenerator.", file=sys.stderr)
-    TestGenerator = None
+    print("ATTENZIONE: Impossibile importare TestGenerator. La funzione di generazione non sarà disponibile.", file=sys.stderr)
+    TestGenerator = None 
 
+# --- Configurazione ---
 app = Flask(__name__, template_folder='templates')
 project_root = Path(__file__).parent
 REPORTS_DIR = project_root / "reports" / "unified"
@@ -28,9 +30,9 @@ ALL_COLUMNS = [
     'Platform', 'DeviceName', 'UDID', 'AppID', 'AppPackage', 'AppActivity'
 ]
 test_process = None
-generation_process = None # --- NUOVA VARIABILE GLOBALE ---
+generation_process = None # Processo per la generazione test
 
-# ... (get_excel_file_path e check_excel_file invariate) ...
+# --- Funzioni di Utility (invariate) ---
 def get_excel_file_path(filename: str) -> Path:
     if not filename: filename = "dati_test.xlsx"
     safe_filename = secure_filename(filename)
@@ -39,6 +41,7 @@ def get_excel_file_path(filename: str) -> Path:
     if project_root != file_path.parent or file_path.suffix != '.xlsx':
         abort(400, "Nome file non valido o non consentito.")
     return file_path
+
 def check_excel_file(file_path: Path):
     if not file_path.exists():
         print(f"⚠️  Creazione file vuoto locale: {file_path.name}")
@@ -46,15 +49,30 @@ def check_excel_file(file_path: Path):
         try: df_empty.to_excel(file_path, sheet_name=SHEET_NAME, index=False)
         except Exception as e: print(f"❌ Impossibile creare il file Excel locale: {e}")
 
-# --- Route HTML (invariate) ---
+# --- Route per le Pagine HTML (MODIFICATE) ---
 @app.route('/')
-def index(): return render_template('index.html')
+def index(): 
+    """Serve la NUOVA pagina Home."""
+    return render_template('home.html')
+
+@app.route('/editor')
+def editor_page():
+    """Serve la pagina principale dell'editor (ex index)."""
+    return render_template('index.html')
+
 @app.route('/reports')
-def reports_page(): return render_template('reports.html')
+def reports_page(): 
+    """Serve la pagina di elenco dei report."""
+    return render_template('reports.html')
+
 @app.route('/generate')
-def generate_page(): return render_template('generate_tests.html')
+def generate_page():
+    """Serve la pagina di generazione test."""
+    return render_template('generate_tests.html')
+
 @app.route('/reports/view/<path:filepath>')
 def serve_report(filepath):
+    """Serve i file di report locali."""
     try:
         safe_path = REPORTS_DIR.joinpath(filepath).resolve()
         if not safe_path.is_file() or REPORTS_DIR not in safe_path.parents:
@@ -67,33 +85,42 @@ def serve_report(filepath):
 
 @app.route('/api/excel-files', methods=['GET'])
 def get_excel_files():
+    """Elenca i file .xlsx locali nella root."""
     files = [f.name for f in project_root.glob('*.xlsx') if not f.name.startswith('~$')]
     files.sort(); return jsonify(files)
 
 @app.route('/api/input-files', methods=['GET'])
 def get_input_files():
+    """Elenca i file .txt, .md, .req locali nella root."""
     files = []
-    for ext in ('*.txt', '*.md', '*.req'): files.extend(project_root.glob(ext))
+    for ext in ('*.txt', '*.md', '*.req'):
+        files.extend(project_root.glob(ext))
+    
     file_names = sorted([f.name for f in files if not f.name.startswith('~$')])
     return jsonify(file_names)
 
 @app.route('/api/upload-input-file', methods=['POST'])
 def upload_input_file():
+    """Salva un file .txt/.md caricato nella cartella locale del progetto."""
     if 'file' not in request.files: return jsonify({"error": "Nessun file inviato"}), 400
     file = request.files['file']
     if file.filename == '': return jsonify({"error": "File non selezionato"}), 400
+    
     filename = secure_filename(file.filename)
     if not filename.endswith(('.txt', '.md', '.req', '.prompt')):
         return jsonify({"error": "File non valido. Seleziona un file .txt, .md, .req, o .prompt."}), 400
+        
     try:
         file_path = (project_root / filename).resolve()
-        if file_path.parent != project_root: abort(400, "Percorso file non valido.")
+        if file_path.parent != project_root:
+             abort(400, "Percorso file non valido.")
+             
         file.save(file_path)
         print(f"✅ File di input caricato localmente: {filename}")
         return jsonify({"success": True, "filename": filename})
-    except Exception as e: return jsonify({"error": str(e)}), 500
+    except Exception as e: 
+        return jsonify({"error": str(e)}), 500
 
-# --- API /api/generate-tests (MODIFICATA per SUBPROCESS) ---
 @app.route('/api/generate-tests', methods=['POST'])
 def api_generate_tests():
     """
@@ -119,7 +146,6 @@ def api_generate_tests():
         if not (project_root / prompt_file_safe).exists():
              return Response(f"File prompt non trovato: {prompt_file_safe}", status=404)
         
-        # Prepara il comando
         python_exe = sys.executable
         generator_script = str(project_root / 'tests' / 'test_generator.py')
         cmd = [
@@ -147,7 +173,7 @@ def api_generate_tests():
                 yield "--- 🚀 Avvio generazione... (L'output JSON apparirà alla fine) ---\n\n"
                 
                 for line in iter(generation_process.stdout.readline, ''):
-                    yield line # Invia i log (da stderr) E l'output JSON (da stdout)
+                    yield line
                     time.sleep(0.01)
                 
                 generation_process.stdout.close()
@@ -167,17 +193,14 @@ def api_generate_tests():
     except Exception as e:
         print(f"❌ Errore avvio generazione: {e}", file=sys.stderr)
         return Response(f"Errore interno: {e}", status=500)
-# --- FINE MODIFICA API ---
 
-# --- NUOVA API PER STOP GENERAZIONE ---
 @app.route('/api/stop-generation', methods=['POST'])
 def stop_generation():
     """Termina il processo di generazione test in esecuzione."""
     global generation_process
     if generation_process and generation_process.poll() is None:
         try:
-            generation_process.terminate()
-            generation_process.wait(timeout=2) 
+            generation_process.terminate(); generation_process.wait(timeout=2) 
             print("⛔ Processo di generazione terminato dall'utente.")
             return jsonify({"success": True, "message": "Processo terminato."})
         except subprocess.TimeoutExpired:
@@ -185,15 +208,13 @@ def stop_generation():
             print("⛔ Processo di generazione forzato a terminare (kill).")
             return jsonify({"success": True, "message": "Processo terminato forzatamente."})
         except Exception as e:
-            print(f"❌ Errore durante l'interruzione: {e}")
             return jsonify({"success": False, "message": str(e)}), 500
     else:
         return jsonify({"success": False, "message": "Nessun processo in esecuzione."}), 404
-# --- FINE NUOVA API ---
-
 
 @app.route('/api/upload-excel', methods=['POST'])
 def upload_excel():
+    """Salva un file Excel caricato nella cartella locale del progetto."""
     if 'file' not in request.files: return jsonify({"error": "Nessun file inviato"}), 400
     file = request.files['file']
     if file.filename == '': return jsonify({"error": "File non selezionato"}), 400
@@ -208,6 +229,7 @@ def upload_excel():
 
 @app.route('/api/reports', methods=['GET'])
 def get_reports_list():
+    """Elenca i report locali."""
     report_list = []
     if not REPORTS_DIR.exists(): return jsonify([])
     for dir_path in REPORTS_DIR.iterdir():
@@ -220,6 +242,7 @@ def get_reports_list():
 
 @app.route('/api/reports/<folder_name>', methods=['DELETE'])
 def delete_report_folder(folder_name):
+    """Elimina una cartella specifica all'interno di REPORTS_DIR."""
     try:
         safe_folder_name = secure_filename(folder_name)
         if not safe_folder_name or safe_folder_name != folder_name: abort(400, "Nome cartella non valido.")
@@ -234,6 +257,7 @@ def delete_report_folder(folder_name):
 
 @app.route('/api/tests', methods=['GET'])
 def get_tests():
+    """Legge un file Excel locale e gestisce errori di colonna."""
     filename = request.args.get('file', 'dati_test.xlsx')
     file_path = get_excel_file_path(filename)
     check_excel_file(file_path)
@@ -261,6 +285,7 @@ def get_tests():
 
 @app.route('/api/tests', methods=['POST'])
 def save_tests():
+    """Salva un file Excel localmente."""
     filename = request.args.get('file', 'dati_test.xlsx')
     file_path = get_excel_file_path(filename)
     try:
@@ -317,7 +342,6 @@ def stop_tests():
             print("⛔ Processo di test forzato a terminare (kill).")
             return jsonify({"success": True, "message": "Processo terminato forzatamente."})
         except Exception as e:
-            print(f"❌ Errore durante l'interruzione del processo: {e}")
             return jsonify({"success": False, "message": str(e)}), 500
     else:
         return jsonify({"success": False, "message": "Nessun processo in esecuzione."}), 404
@@ -332,14 +356,13 @@ def add_cache_busting_headers(response):
 
 # --- Avvio del Server ---
 def open_browser():
+    # Ora apre la nuova Home Page
     def _open(): webbrowser.open_new("http://127.0.0.1:5000/")
     t = threading.Timer(1.0, _open); t.daemon = True; t.start()
 
 if __name__ == '__main__':
     Path('templates').mkdir(exist_ok=True)
     print(f"\n🚀 Avvio Test Editor su http://127.0.0.1:5000")
-    print("   L'editor ora legge e scrive file locali.")
-    print("   La cache del browser e' disabilitata forzatamente.")
     print("   Premi CTRL+C per fermare il server.")
     open_browser()
     app.run(host='127.0.0.1', port=5000, debug=False)

@@ -1,234 +1,207 @@
 # AI Test Automation Framework
 
-Framework unificato per test automation con AI agents, supporta sia test **mobile** (iOS/Android) che **web** (browser).
+Framework unificato per test automation con AI agents, che supporta sia test **mobile** (iOS/Android) che **web** (browser).
 
-## 🚀 Features
+Ora include una **interfaccia web completa** per la gestione, l'esecuzione e la generazione di test case.
 
-- ✨ **Unified Runner**: Gestione unificata di test mobile e web.
-- 🤖 **AI-Powered**: Usa LLM (Gemini, OpenAI, Ollama) per interpretare task in linguaggio naturale.
-- 📱 **Mobile Testing**: Supporto completo per iOS e Android via Appium.
-- 🌐 **Web Testing**: Automazione browser con Browser-Use.
-- 📊 **HTML Reports**: Report interattivi con screenshot e GIF animate.
+## 🚀 Features Principali
+
+- ✨ **Web UI Integrata**: Una pagina Home per navigare tra le funzionalità principali.
+- 📝 **Editor Test Case Web**: Un editor visuale per creare, modificare, eliminare e gestire i test case nei tuoi file Excel.
+- 🤖 **Generatore Test Case AI**: Una pagina dedicata per caricare file di requisiti e generare automaticamente nuovi test case usando l'AI.
+- ▶️ **Esecuzione Web**: Avvia e ferma le esecuzioni dei test direttamente dal browser, visualizzando i log in tempo reale.
+- 📊 **Visualizzatore Report**: Sfoglia, apri ed elimina i report HTML delle esecuzioni passate.
+- 📱 **Test Mobili**: Supporto completo per iOS e Android tramite Appium.
+- 🌐 **Test Web**: Automazione browser tramite Browser-Use.
 - ☁️ **Cloud Support**: Integrazione con LambdaTest per testing su cloud.
-- 📝 **Web Editor**: Interfaccia web per gestire i file Excel dei test case (aggiungere, modificare, eliminare righe, avviare esecuzioni).
-- 🔄 **Excel Configuration**: Configurazione test tramite file Excel.
 
 ## 📋 Requisiti
 
 ### Software
-- Python 3.11+.
-- Node.js (per Appium).
-- Appium Server.
-- Browser Chromium/Chrome.
-- Flask (per l'editor web).
+- Python 3.11+
+- Node.js (per Appium, se si eseguono test mobile)
+- Appium Server (se si eseguono test mobile locali)
+- Browser Chromium/Chrome
 
 ### Installazione Dipendenze
 
+1.  **Crea Ambiente Virtuale**
+    ```bash
+    python -m venv .venv
+    ```
+
+2.  **Attiva Ambiente**
+    ```bash
+    # Windows
+    .venv\Scripts\activate
+    # Mac/Linux
+    source .venv/bin/activate
+    ```
+
+3.  **Installa Dipendenze Python**
+    (Include `Flask`, `pandas`, `langchain`, `google-generativeai`, `appium-python-client`, ecc.)
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Installa Dipendenze Web/Mobile (Necessarie per `main_runner.py`)**
+    ```bash
+    # Installa Playwright (per test web)
+    playwright install chromium --with-deps
+
+    # Installa Appium (per test mobile)
+    npm install -g appium
+    appium driver install uiautomator2  # Android
+    # appium driver install xcuitest      # iOS
+    ```
+
+## ⚙️ Configurazione
+
+### 1. File .env
+
+Crea un file `.env` nella root del progetto copiando `.env.example`.
+
+**L'unica variabile obbligatoria per iniziare è una chiave API per l'IA:**
+
 ```bash
-# Crea ambiente virtuale
-python -m venv .venv
-
-# Attiva ambiente
-# Windows:
-.venv\Scripts\activate
-# Mac/Linux:
-source .venv/bin/activate
-
-# Installa dipendenze Python
-pip install -r requirements.txt
-
-# Installa Appium (per test mobile)
-npm install -g appium
-appium driver install uiautomator2  # Android
-appium driver install xcuitest      # iOS
-
-# Installa Playwright (per test web)
-playwright install chromium --with-deps
-
-⚙️ Configurazione
-1. File .env
-Crea un file .env nella root del progetto copiando .env.example. Modifica almeno una API key per un provider LLM (es. GOOGLE_API_KEY).
-
-Bash
-
-# Esempio minimo
-# === LLM Configuration ===
+# Esempio minimo per Google Gemini (raccomandato)
 GOOGLE_API_KEY=your_google_api_key
 
-# === Mobile Testing (LambdaTest - Opzionale) ===
-LT_USERNAME=your_lambdatest_username
-LT_ACCESS_KEY=your_lambdatest_access_key
-
-# === Misc ===
-ANONYMIZED_TELEMETRY=false
-BROWSER_HEADLESS=false
+# ---
+# Puoi configurare quale LLM usare per l'esecuzione E la generazione
+# Opzioni: "gemini", "openai", "ollama"
+WEB_LLM_PROVIDER=gemini
+Assicurati che l'API key corrispondente (es. OPENAI_API_KEY se usi "openai") sia configurata.
 
 2. File Excel
-Il file dati_test.xlsx (o un altro file .xlsx nella root) contiene i test case. Puoi gestirlo manualmente o usare l'editor web.
+L'editor web gestirà automaticamente la creazione e la modifica dei file .xlsx nella cartella principale. La struttura richiesta è: TestID, Descrizione, Task, Active, Device, Execution, Platform, DeviceName, UDID, AppID, AppPackage, AppActivity
 
-Colonne Obbligatorie (per tutti i test)
-TestID: Identificatore univoco (es: WEB_001, MOB_001).
+🎯 Utilizzo (Metodo Consigliato: Interfaccia Web)
+Avvia l'interfaccia web completa con un singolo comando.
 
-Descrizione: Descrizione human-readable del test.
-
-Task: Task in linguaggio naturale per l'AI agent.
-
-Active: True/False per eseguire o saltare il test.
-
-Device: mobile o web.
-
-Colonne per Test Mobile (solo se Device="mobile")
-Execution: local o cloud.
-
-Platform: Android o iOS.
-
-DeviceName: Nome del dispositivo.
-
-UDID: Device ID per esecuzione locale.
-
-AppPackage: Package name Android.
-
-AppActivity: Activity Android.
-
-AppID: App ID per LambdaTest (solo con Execution = 'cloud').
-
-🎯 Utilizzo
-Opzione 1: Esecuzione Standard da Terminale
+1. Avvia il Web Server
 Bash
 
-# Esegui tutti i test attivi dal file di default (dati_test.xlsx)
-python main_runner.py
-
-# Esegui test da un file specifico
-python main_runner.py --file nome_altro_file.xlsx
-Il sistema legge l'Excel, filtra i test attivi, li instrada all'executor corretto (mobile/web) e genera/apre il report HTML.
-
-Opzione 2: Gestione ed Esecuzione tramite Web Editor
-Avvia l'Editor Web:
-
-Bash
-
+# Assicurati che il tuo ambiente .venv sia attivo
 python web_editor.py
-Il browser si aprirà automaticamente su http://127.0.0.1:5000.
+Il tuo browser si aprirà automaticamente su http://127.0.0.1:5000.
 
-Usa l'Interfaccia:
+2. Pagina Home
+Verrai accolto da una pagina iniziale dove potrai scegliere tra:
 
-Seleziona il file Excel dal menu a tendina.
+Editor Test Case: Per gestire ed eseguire i test.
 
-Carica nuovi file .xlsx dal tuo disco.
+Genera Test Case: Per creare nuovi test da requisiti.
 
-Modifica i dati nelle celle (doppio click o seleziona e scrivi).
+Vedi Report Esecuzioni: Per visualizzare lo storico dei report.
 
-Attiva/Disattiva test con le checkbox.
+3. Editor Test Case (/editor)
+Gestisci File: Seleziona file .xlsx esistenti o carica nuovi file dal tuo computer.
 
-Aggiungi/Elimina righe.
+Modifica Live: Clicca su qualsiasi cella per modificarne il contenuto. Il testo lungo è gestito correttamente.
 
-Espandi righe con task lunghi.
+Attiva/Disattiva: Usa le checkbox Active per decidere quali test eseguire.
 
-Salva le modifiche (il pulsante appare solo se ci sono modifiche).
+Aggiungi/Elimina: Aggiungi nuove righe o eliminale con le icone <i class="bi bi-trash-fill"></i> e <i class="bi bi-plus-lg"></i>.
 
-Avvia Test: Clicca sul pulsante <i class="bi bi-play-fill"></i> per eseguire i test attivi nel file attualmente visualizzato. L'output apparirà in una finestra modale.
+Esegui Test:
 
-Visualizza Report: Clicca su "Vedi Report" per accedere all'elenco delle esecuzioni passate e aprirle o eliminarle.
+Clicca <i class="bi bi-play-fill"></i> Avvia Test.
 
-Ferma l'Editor: Premi CTRL+C nel terminale dove hai avviato web_editor.py.
+Se hai modifiche non salvate, ti verrà chiesto di salvarle.
 
-Debug
-Bash
+L'output del terminale apparirà in una finestra modale.
 
-# Abilita logging dettagliato (imposta nel .env o come variabile d'ambiente)
-# BROWSER_USE_LOGGING_LEVEL=DEBUG
-# DEBUG_MODE=true
+Puoi fermare l'esecuzione in qualsiasi momento con il pulsante STOP.
 
-# Esegui con encoding forzato (per Windows, se hai problemi con caratteri speciali)
-python -X utf8 main_runner.py
-python -X utf8 web_editor.py
+4. Generatore di Test (/generate)
+Carica Input: Carica un file di requisiti (es. requisiti.txt) e un file di prompt (es. prompt_costruisci_test.txt).
+
+Seleziona: I file caricati appaiono nei menu a tendina (l'ultimo prompt usato viene memorizzato).
+
+Genera: Clicca <i class="bi bi-magic"></i> Genera Test Case.
+
+Log in Tempo Reale: Vedrai i log dell'IA mentre lavora.
+
+Interrompi: Puoi fermare la generazione con il pulsante STOP.
+
+Scarica: I risultati appaiono in una tabella, pronti per essere scaricati come file .csv.
 
 📁 Struttura Progetto (Aggiornata)
 aitestautomation/
-├── main_runner.py              # Entry point esecuzione test
-├── web_editor.py               # NUOVO: Entry point editor web
-├── dati_test.xlsx              # File Excel di default
-├── .env                        # Configurazione (GIT IGNORED)
-├── requirements.txt            # Dipendenze Python
-├── system_prompt.txt           # System prompt custom per web tests
 │
-├── templates/                  # NUOVO: File HTML per l'editor web
-│   ├── index.html
-│   └── reports.html
+├── 🚀 CORE FILES
+│   ├── web_editor.py             # Entry point NUOVO (Avvia server web)
+│   ├── main_runner.py            # Entry point Esecuzione Test (usato da web_editor)
+│   ├── dati_test.xlsx            # File Excel di default
+│   ├── .env                      # Configurazione (GIT IGNORED)
+│   └── requirements.txt          # Dipendenze Python
 │
-├── tests/
-│   ├── mobile_test_executor.py # Executor test mobile
-│   ├── web_test_executor.py    # Executor test web
+├── 📁 templates/                
+│   ├── home.html                 # Pagina iniziale
+│   ├── index.html                # Editor Test Case
+│   ├── generate_tests.html       # Pagina Generazione Test
+│   └── reports.html              # Pagina Elenco Report
 │
-├── utilities/
-│   ├── excel_utils.py          # Lettura Excel
-│   ├── report_utils.py         # Generazione report HTML
-│   ├── set_capabilities.py     # Configurazione Appium
-│   └── utils.py                # Utility functions
+├── 🧪 tests/
+│   ├── test_generator.py         # Classe per generare test da AI
+│   ├── mobile_test_executor.py   # Executor test mobile
+│   └── web_test_executor.py      # Executor test web
 │
-├── screen/
-│   ├── mobile/                 # Screenshot test mobile
-│   └── web/                    # Screenshot test web
+├── 🛠️ utilities/
+│   ├── excel_utils.py            # Lettura Excel
+│   ├── report_utils.py           # Generazione report HTML
+│   └── ...                       # Altre utility
 │
-├── reports/
-│   └── unified/                # Report unificati
-│       └── YYYYMMDD_HHMMSS/
-│           └── test_report_*.html
+├── 📊 reports/
+│   └── unified/                  # Report HTML generati
 │
-├── app_class.py                # Wrapper Appium per test mobile
-└── app_use/                    # Package App-Use agent per mobile
-
-📊 Report
-Il report HTML generato da main_runner.py include:
-
-Summary Dashboard
-
-Screenshot interattivi
-
-GIF Animata (se abilitata)
-
-Status Colorati
-
-Step-by-Step
-
-Location: reports/unified/YYYYMMDD_HHMMSS/test_report_*.html. Puoi accedere all'elenco tramite il link "Vedi Report" nell'editor web.
-
+└── 🖼️ screen/                   # Screenshot dei test
 🔧 Troubleshooting
-Problema: Web Editor non trova index.html (TemplateNotFound)
-Soluzione: Assicurati che i file index.html e reports.html siano dentro una cartella chiamata templates allo stesso livello di web_editor.py. Verifica che .gitignore non stia ignorando i file .html.
+Problema: ModuleNotFoundError: No module named 'pandas' (o flask)
+Soluzione: L'ambiente virtuale non è attivo.
 
-Problema: ModuleNotFoundError: No module named 'pandas' (o altre librerie)
-Soluzione: Assicurati che l'ambiente virtuale .venv sia attivo ((.venv) visibile nel terminale) e reinstalla le dipendenze: pip install -r requirements.txt.
+Ferma il server (CTRL+C).
 
-Problema: Caratteri speciali/Emoji non visibili nel terminale (UnicodeEncodeError)
-Soluzione: Esegui gli script con -X utf8 (python -X utf8 web_editor.py) o rimuovi/sostituisci i caratteri problematici (come nel banner di main_runner.py o le emoji in config_manager.py).
+Attiva l'ambiente: .venv\Scripts\activate (Windows) o source .venv/bin/activate (Mac/Linux).
 
-Problema: Test mobile non parte
-Checklist: Appium server in esecuzione (appium)? Device connesso/emulatore avviato (adb devices)? UDID corretto? App installata? Variabili .env (per cloud) corrette?
+Installa le dipendenze: pip install -r requirements.txt.
 
-Problema: Test web non parte
-Checklist: Browser-Use installato? Chromium installato (playwright install chromium --with-deps)? API key LLM configurata in .env?
+Riavvia il server: python web_editor.py.
 
-📞 Support
+Problema: TemplateNotFound: home.html (o index.html)
+Soluzione: Il server non trova i file HTML. Assicurati che i file home.html, index.html, generate_tests.html, e reports.html si trovino in una cartella chiamata templates allo stesso livello di web_editor.py.
+
+Problema: L'interfaccia web non si aggiorna dopo le modifiche al codice
+Soluzione: Il tuo browser sta usando una vecchia versione in cache.
+
+Assicurati che il server web_editor.py sia in esecuzione (l'ultima versione disabilita la cache).
+
+Svuota la cache del browser o fai un Hard Refresh (Ctrl+Shift+R su Windows, Cmd+Shift+R su Mac).
+
+Prova in una finestra di navigazione in incognito.
+
+Problema: UnicodeEncodeError (caratteri strani nel terminale)
+Soluzione: (Solo per Windows) Il terminale non gestisce i caratteri UTF-8.
+
+Azione: Rimuovi i caratteri speciali (come emoji ✅ o banner ╔═══╗) dai file Python (config_manager.py, main_runner.py).
+
+Alternativa: Avvia python con il flag -X utf8: python -X utf8 web_editor.py.
+
+📞 Supporto
 📧 Email: pasquale.dellibergoli91@gmail.com
 
 📖 Docs: Vedi cartella docs/.
 
-📄 License
+📄 Licenza
 MIT License
 
-🤝 Contributing
-Pull requests are welcome!
-
-🙏 Credits
+🙏 Riconoscimenti
 Browser-Use
 
 App-Use
 
 Appium
-
-LambdaTest
 
 Flask
 
