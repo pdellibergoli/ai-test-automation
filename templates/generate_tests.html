@@ -53,13 +53,16 @@
                 <a href="/" class="btn btn-outline-light me-2">
                     <i class="bi bi-house-door-fill"></i> Home
                 </a>
-                <a href="/editor" class="btn btn-outline-primary">
-                    <i class="bi bi-pencil-square"></i> Torna all'Editor
+                <a href="/editor" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-pencil-square"></i> Vai all'Editor
+                </a>
+                <a href="/config" class="btn btn-outline-secondary" title="Configurazione LLM">
+                    <i class="bi bi-gear-fill"></i>
                 </a>
             </div>
         </div>
         <p class="text-body-secondary">
-            Seleziona i file dalla lista o carica nuovi file di requisiti/prompt dalla tua macchina.
+            Seleziona i file dalla lista o carica nuovi file di requisiti/prompt. L'LLM utilizzato sarà quello impostato nella pagina di Configurazione.
         </p>
         
         <div class="card">
@@ -107,7 +110,6 @@
              <h4 class="mt-4">Log di Generazione</h4>
              <pre id="generation-log"></pre>
         </div>
-
         <div class="mt-4" id="results-container" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h3>Risultati Generati</h3>
@@ -120,10 +122,8 @@
                 <tbody id="results-table-body"></tbody>
             </table>
         </div>
-        
         <div id="error-alert" class="alert alert-danger mt-4" style="display: none;" role="alert"></div>
     </div>
-
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="app-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header">
@@ -136,7 +136,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- (TUTTO IL JAVASCRIPT RIMANE INVARIATO) ---
+        // (Tutto il JS rimane invariato)
         const generateButton = document.getElementById('generate-button');
         const loadingOverlay = document.getElementById('loading-overlay');
         const resultsContainer = document.getElementById('results-container');
@@ -150,14 +150,12 @@
         const logPre = document.getElementById('generation-log');
         let generatedData = [];
         const PROMPT_STORAGE_KEY = 'savedTestGeneratorPrompt';
-
         document.addEventListener('DOMContentLoaded', () => {
             generateButton.addEventListener('click', generateTests);
             stopGenerationButton.addEventListener('click', stopGeneration);
             loadInputFiles();
             promptSelect.addEventListener('change', (e) => { localStorage.setItem(PROMPT_STORAGE_KEY, e.target.value); });
         });
-
         async function loadInputFiles() {
             try {
                 const response = await fetch('/api/input-files');
@@ -175,7 +173,6 @@
                 });
             } catch (error) { showError(`Errore nel caricamento dei file di input: ${error.message}`); }
         }
-
         function showError(message) { errorAlert.textContent = message; errorAlert.style.display = 'block'; }
         function hideError() { errorAlert.style.display = 'none'; }
         function setLoading(isLoading) {
@@ -187,7 +184,6 @@
                 generateButton.disabled = false;
             }
         }
-
         async function generateTests() {
             hideError(); setLoading(true);
             resultsContainer.style.display = 'none';
@@ -195,7 +191,6 @@
             generatedData = [];
             const reqFile = reqSelect.value; const promptFile = promptSelect.value;
             if (!reqFile || !promptFile) { showError("Devi selezionare entrambi i file."); setLoading(false); return; }
-            
             let jsonDataString = ''; let jsonStarted = false;
             try {
                 const response = await fetch('/api/generate-tests', {
@@ -204,7 +199,6 @@
                     body: JSON.stringify({ requirements_file: reqFile, prompt_file: promptFile })
                 });
                 if (!response.ok) { const errorText = await response.text(); throw new Error(errorText || `Errore server: ${response.status}`); }
-                
                 const reader = response.body.getReader(); const decoder = new TextDecoder();
                 while (true) {
                     const { value, done } = await reader.read(); if (done) break;
@@ -221,7 +215,6 @@
                     }
                     logPre.scrollTop = logPre.scrollHeight;
                 }
-
                 if (jsonStarted && jsonDataString) {
                     try {
                         jsonDataString = jsonDataString.split('--- ✅ Generazione terminata ---')[0].split('--- ❌ Generazione fallita ---')[0];
@@ -239,7 +232,6 @@
             } catch (error) { showError(`Generazione fallita: ${error.message}`); }
             finally { setLoading(false); }
         }
-
         function populateResultsTable(data) {
             resultsTableBody.innerHTML = '';
             if (data.length === 0) { resultsTableBody.innerHTML = '<tr><td colspan="2" class="text-center">L\'AI non ha restituito casi di test.</td></tr>'; }
@@ -255,7 +247,6 @@
             }
             resultsContainer.style.display = 'block';
         }
-
         function downloadCSV() {
             if (generatedData.length === 0) return;
             const headers = "Descrizione,Task";
@@ -271,7 +262,6 @@
             link.style.visibility = 'hidden'; document.body.appendChild(link);
             link.click(); document.body.removeChild(link);
         }
-        
         function triggerUpload(inputId) { document.getElementById(inputId).click(); }
         async function handleFileUpload(event, targetSelectId) {
             const file = event.target.files[0]; if (!file) return;
@@ -293,7 +283,6 @@
                 event.target.value = null;
             }
         }
-        
         async function stopGeneration() {
             if (!confirm("Sei sicuro di voler terminare la generazione dei test?")) return;
             stopGenerationButton.disabled = true;
@@ -310,7 +299,6 @@
                 stopGenerationButton.innerHTML = '<i class="bi bi-stop-circle-fill"></i> Interrompi';
             }
         }
-        
         function showToast(title, body, type = 'success') {
             const toastTitle = document.getElementById('toast-title');
             const toastBody = document.getElementById('toast-body');

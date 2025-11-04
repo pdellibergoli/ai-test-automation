@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="it" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Test Automation - Configurazione</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { padding-top: 20px; }
+        .container { max-width: 800px; }
+        .nav-pills .nav-link { cursor: pointer; }
+        .llm-fields { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0"><i class="bi bi-gear-fill"></i> Configurazione LLM</h2>
+            <div>
+                <a href="/" class="btn btn-outline-light me-2">
+                    <i class="bi bi-house-door-fill"></i> Home
+                </a>
+                <a href="/editor" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil-square"></i> Vai all'Editor Test
+                </a>
+            </div>
+        </div>
+
+        <p class="text-body-secondary">
+            Seleziona il provider LLM che desideri utilizzare per l'esecuzione e la generazione dei test.
+            Le impostazioni verranno salvate direttamente nel file <code>.env</code> del progetto.
+        </p>
+
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label for="llm-provider-select" class="form-label fs-5">Provider LLM Attivo</label>
+                    <select id="llm-provider-select" class="form-select form-select-lg">
+                        <option value="">Caricamento...</option>
+                    </select>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div id="llm-fields-container">
+                    </div>
+                
+                <button class="btn btn-success btn-lg w-100 mt-3" id="save-button" onclick="saveSettings()">
+                    <i class="bi bi-save"></i> Salva Configurazione
+                </button>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="app-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Notifica</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-body"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const providerSelect = document.getElementById('llm-provider-select');
+        const fieldsContainer = document.getElementById('llm-fields-container');
+        const saveButton = document.getElementById('save-button');
+        const bsToast = new bootstrap.Toast(document.getElementById('app-toast'));
+        
+        let llmModelsConfig = {}; 
+        let currentEnvValues = {}; 
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadLlmModels();
+            await loadCurrentEnv();
+            
+            // Popola i campi per il provider attualmente salvato
+            updateFormFields(currentEnvValues.WEB_LLM_PROVIDER || 'gemini');
+            
+            providerSelect.addEventListener('change', (e) => {
+                updateFormFields(e.target.value);
+            });
+        });
+
+        async function loadLlmModels() {
+            try {
+                const response = await fetch('/api/llm-models');
+                llmModelsConfig = await response.json();
+                
+                providerSelect.innerHTML = '';
+                for (const [id, config] of Object.entries(llmModelsConfig)) {
+                    const option = new Option(config.name, id);
+                    providerSelect.add(option);
+                }
+            } catch (e) {
+                showToast("Errore Critico", `Impossibile caricare llm_models.json: ${e.message}`, "danger");
+            }
+        }
+        
+        async function loadCurrentEnv() {
+             try {
+                const response = await fetch('/api/get-env');
+                currentEnvValues = await response.json();
+                if (currentEnvValues.error) throw new Error(currentEnvValues.error);
+                
+                providerSelect.value = currentEnvValues.WEB_LLM_PROVIDER || 'gemini';
+                
+            } catch (e) {
+                showToast("Errore", `Impossibile caricare .env: ${e.message}`, "danger");
+            }
+        }
+
+        function updateFormFields(providerId) {
+            const config = llmModelsConfig[providerId];
+            if (!config) return;
+            
+            fieldsContainer.innerHTML = ''; // Pulisci
+            
+            config.fields.forEach(field => {
+                const value = currentEnvValues[field.id] || field.default || '';
+                const fieldHtml = `
+                    <div class="mb-3">
+                        <label for="field-${field.id}" class="form-label">${field.label}</label>
+                        <input type="${field.type}" class="form-control" id="field-${field.id}" value="${value}" placeholder="${field.label}...">
+                    </div>
+                `;
+                fieldsContainer.innerHTML += fieldHtml;
+            });
+        }
+        
+        async function saveSettings() {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvataggio...';
+            
+            const selectedProviderId = providerSelect.value;
+            const config = llmModelsConfig[selectedProviderId];
+            const dataToSave = {};
+            
+            config.fields.forEach(field => {
+                const input = document.getElementById(`field-${field.id}`);
+                dataToSave[field.id] = input.value;
+            });
+            
+            for (const [key, value] of Object.entries(config.env_to_set)) {
+                dataToSave[key] = value;
+            }
+
+            try {
+                const response = await fetch('/api/save-env', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSave)
+                });
+                
+                const result = await response.json();
+                if (!response.ok || result.error) throw new Error(result.error || "Errore sconosciuto");
+                
+                showToast("Successo", "Configurazione salvata nel file .env!", "success");
+                await loadCurrentEnv(); // Ricarica i valori
+                
+            } catch (e) {
+                showToast("Errore Salvataggio", e.message, "danger");
+            } finally {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="bi bi-save"></i> Salva Configurazione';
+            }
+        }
+
+        function showToast(title, body, type = 'success') {
+            const toastTitle = document.getElementById('toast-title');
+            const toastBody = document.getElementById('toast-body');
+            const toastEl = document.getElementById('app-toast');
+            
+            toastTitle.textContent = title;
+            toastBody.textContent = body;
+            
+            toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
+            if (type === 'success') { toastEl.classList.add('text-bg-success'); }
+            else if (type === 'danger') { toastEl.classList.add('text-bg-danger'); }
+            else { toastEl.classList.add('text-bg-warning'); }
+            bsToast.show();
+        }
+    </script>
+</body>
+</html>

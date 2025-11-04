@@ -1,0 +1,26 @@
+{
+    "gemini": {
+      "name": "Google Gemini",
+      "fields": [
+        { "id": "GOOGLE_API_KEY", "label": "API Key", "type": "password" },
+        { "id": "GEMINI_MODEL", "label": "Model Name", "type": "text", "default": "gemini-2.5-flash" }
+      ],
+      "env_to_set": { "WEB_LLM_PROVIDER": "gemini", "USE_LOCAL_LLM": "false" }
+    },
+    "openai": {
+      "name": "OpenAI",
+      "fields": [
+        { "id": "OPENAI_API_KEY", "label": "API Key", "type": "password" },
+        { "id": "OPENAI_MODEL", "label": "Model Name", "type": "text", "default": "gpt-4.1-mini" }
+      ],
+      "env_to_set": { "WEB_LLM_PROVIDER": "openai", "USE_LOCAL_LLM": "false" }
+    },
+    "ollama": {
+      "name": "Ollama (Locale)",
+      "fields": [
+        { "id": "LOCAL_LLM", "label": "Model Name", "type": "text", "default": "llava:13b" },
+        { "id": "OLLAMA_BASE_URL", "label": "Base URL (Opzionale)", "type": "text", "default": "http://localhost:11434" }
+      ],
+      "env_to_set": { "WEB_LLM_PROVIDER": "ollama", "USE_LOCAL_LLM": "true" }
+    }
+  }

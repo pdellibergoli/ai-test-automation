@@ -13,6 +13,7 @@
             color: inherit; 
             transition: all 0.2s ease-in-out; 
             border: 1px solid var(--bs-border-color-translucent);
+            height: 100%; /* Assicura che le card abbiano la stessa altezza */
         }
         .card:hover { 
             transform: translateY(-5px); 
@@ -25,15 +26,14 @@
     </style>
 </head>
 <body>
-    <div class="container" style="max-width: 800px;">
-        <div class="text-center mb-5">
+    <div class="container" style="max-width: 900px;"> <div class="text-center mb-5">
             <h1><i class="bi bi-robot" style="color: #0d6efd;"></i> Benvenuto!</h1>
             <p class="lead text-body-secondary">AI Test Automation Framework</p>
         </div>
         
         <div class="row g-4">
-            <div class="col-md-6">
-                <a href="/editor" class="card h-100">
+            <div class="col-md-4">
+                <a href="/editor" class="card">
                     <div class="card-body text-center p-4">
                         <i class="bi bi-pencil-square text-primary mb-3"></i>
                         <h4 class="card-title">Editor Test Case</h4>
@@ -41,12 +41,21 @@
                     </div>
                 </a>
             </div>
-            <div class="col-md-6">
-                <a href="/generate" class="card h-100">
+            <div class="col-md-4">
+                <a href="/generate" class="card">
                     <div class="card-body text-center p-4">
                         <i class="bi bi-magic text-warning mb-3"></i>
                         <h4 class="card-title">Genera Test Case</h4>
                         <p class="card-text">Usa l'AI per generare nuovi test case dai requisiti.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/config" class="card">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-gear-fill text-secondary mb-3"></i>
+                        <h4 class="card-title">Configurazione</h4>
+                        <p class="card-text">Imposta le API key e seleziona il provider LLM (Gemini, OpenAI, ecc.).</p>
                     </div>
                 </a>
             </div>

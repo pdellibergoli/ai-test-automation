@@ -11,6 +11,9 @@ import sys
 import time
 from io import BytesIO
 import shutil
+import json
+# Importa le funzioni per leggere/scrivere .env
+from dotenv import load_dotenv, set_key, find_dotenv 
 
 # Importa il TestGenerator
 try:
@@ -24,13 +27,18 @@ app = Flask(__name__, template_folder='templates')
 project_root = Path(__file__).parent
 REPORTS_DIR = project_root / "reports" / "unified"
 SHEET_NAME = 'Foglio1'
+# Trova il file .env o imposta il percorso di default
+ENV_FILE_PATH = find_dotenv()
+if not ENV_FILE_PATH:
+    ENV_FILE_PATH = str(project_root / '.env')
+    Path(ENV_FILE_PATH).touch() # Crealo se non esiste
 
 ALL_COLUMNS = [
     'TestID', 'Descrizione', 'Task', 'Active', 'Execution', 'Device',
     'Platform', 'DeviceName', 'UDID', 'AppID', 'AppPackage', 'AppActivity'
 ]
 test_process = None
-generation_process = None # Processo per la generazione test
+generation_process = None
 
 # --- Funzioni di Utility (invariate) ---
 def get_excel_file_path(filename: str) -> Path:
@@ -41,7 +49,6 @@ def get_excel_file_path(filename: str) -> Path:
     if project_root != file_path.parent or file_path.suffix != '.xlsx':
         abort(400, "Nome file non valido o non consentito.")
     return file_path
-
 def check_excel_file(file_path: Path):
     if not file_path.exists():
         print(f"⚠️  Creazione file vuoto locale: {file_path.name}")
@@ -52,12 +59,12 @@ def check_excel_file(file_path: Path):
 # --- Route per le Pagine HTML (MODIFICATE) ---
 @app.route('/')
 def index(): 
-    """Serve la NUOVA pagina Home."""
+    """Serve la pagina Home (Dashboard)."""
     return render_template('home.html')
 
 @app.route('/editor')
 def editor_page():
-    """Serve la pagina principale dell'editor (ex index)."""
+    """Serve la pagina principale dell'editor."""
     return render_template('index.html')
 
 @app.route('/reports')
@@ -69,6 +76,12 @@ def reports_page():
 def generate_page():
     """Serve la pagina di generazione test."""
     return render_template('generate_tests.html')
+
+# --- NUOVA ROUTE PER CONFIGURAZIONE ---
+@app.route('/config')
+def config_page():
+    """Serve la pagina di configurazione LLM."""
+    return render_template('config.html')
 
 @app.route('/reports/view/<path:filepath>')
 def serve_report(filepath):
@@ -83,64 +96,104 @@ def serve_report(filepath):
 
 # --- API (Dati JSON) ---
 
+# --- NUOVE API PER CONFIGURAZIONE LLM ---
+@app.route('/api/llm-models', methods=['GET'])
+def get_llm_models():
+    """Serve il file di configurazione JSON dei modelli."""
+    try:
+        models_path = project_root / 'llm_models.json'
+        if not models_path.exists():
+            return jsonify({"error": "File 'llm_models.json' non trovato."}), 404
+        with open(models_path, 'r', encoding='utf-8') as f:
+            models = json.load(f)
+        return jsonify(models)
+    except Exception as e:
+        return jsonify({"error": f"Impossibile leggere llm_models.json: {e}"}), 500
+
+@app.route('/api/get-env', methods=['GET'])
+def get_env():
+    """Legge i valori attuali dal file .env."""
+    try:
+        # Assicura che il file esista
+        if not os.path.exists(ENV_FILE_PATH):
+            Path(ENV_FILE_PATH).touch()
+            
+        # Leggi i valori
+        load_dotenv(dotenv_path=ENV_FILE_PATH, override=True)
+        env_values = {
+            "WEB_LLM_PROVIDER": os.getenv("WEB_LLM_PROVIDER", "gemini"),
+            "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY", ""),
+            "GEMINI_MODEL": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
+            "OPENAI_MODEL": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+            "LOCAL_LLM": os.getenv("LOCAL_LLM", "llava:13b"),
+            "OLLAMA_BASE_URL": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            "USE_LOCAL_LLM": os.getenv("USE_LOCAL_LLM", "false"),
+        }
+        return jsonify(env_values)
+    except Exception as e:
+        return jsonify({"error": f"Impossibile leggere il file .env: {e}"}), 500
+
+@app.route('/api/save-env', methods=['POST'])
+def save_env():
+    """Salva le impostazioni ricevute nel file .env."""
+    data = request.json
+    try:
+        print(f"ℹ️  Salvataggio configurazione in {ENV_FILE_PATH}...")
+        for key, value in data.items():
+            # Usa set_key per aggiornare o aggiungere la variabile nel file .env
+            set_key(ENV_FILE_PATH, key, str(value)) # Converte in stringa per sicurezza
+        
+        print("✅ Configurazione .env salvata.")
+        return jsonify({"success": True, "message": "Configurazione salvata."})
+    except Exception as e:
+        print(f"❌ Errore salvataggio .env: {e}")
+        return jsonify({"error": f"Impossibile salvare il file .env: {e}"}), 500
+# --- FINE NUOVE API ---
+
+
 @app.route('/api/excel-files', methods=['GET'])
 def get_excel_files():
-    """Elenca i file .xlsx locali nella root."""
     files = [f.name for f in project_root.glob('*.xlsx') if not f.name.startswith('~$')]
     files.sort(); return jsonify(files)
 
 @app.route('/api/input-files', methods=['GET'])
 def get_input_files():
-    """Elenca i file .txt, .md, .req locali nella root."""
     files = []
-    for ext in ('*.txt', '*.md', '*.req'):
+    for ext in ('*.txt', '*.md', '*.req', '*.prompt'):
         files.extend(project_root.glob(ext))
-    
     file_names = sorted([f.name for f in files if not f.name.startswith('~$')])
     return jsonify(file_names)
 
 @app.route('/api/upload-input-file', methods=['POST'])
 def upload_input_file():
-    """Salva un file .txt/.md caricato nella cartella locale del progetto."""
     if 'file' not in request.files: return jsonify({"error": "Nessun file inviato"}), 400
     file = request.files['file']
     if file.filename == '': return jsonify({"error": "File non selezionato"}), 400
-    
     filename = secure_filename(file.filename)
     if not filename.endswith(('.txt', '.md', '.req', '.prompt')):
-        return jsonify({"error": "File non valido. Seleziona un file .txt, .md, .req, o .prompt."}), 400
-        
+        return jsonify({"error": "File non valido."}), 400
     try:
         file_path = (project_root / filename).resolve()
-        if file_path.parent != project_root:
-             abort(400, "Percorso file non valido.")
-             
+        if file_path.parent != project_root: abort(400, "Percorso file non valido.")
         file.save(file_path)
         print(f"✅ File di input caricato localmente: {filename}")
         return jsonify({"success": True, "filename": filename})
-    except Exception as e: 
-        return jsonify({"error": str(e)}), 500
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/api/generate-tests', methods=['POST'])
 def api_generate_tests():
-    """
-    Avvia test_generator.py come subprocess e restituisce l'output in streaming.
-    """
     global generation_process
     if generation_process and generation_process.poll() is None:
         return Response("Una generazione è già in corso.", status=409)
-
     data = request.json
     req_file_name = data.get('requirements_file')
     prompt_file_name = data.get('prompt_file')
-    
     if not req_file_name or not prompt_file_name:
         return Response("File requisiti e file prompt sono necessari.", status=400)
-
     try:
         req_file_safe = secure_filename(req_file_name)
         prompt_file_safe = secure_filename(prompt_file_name)
-        
         if not (project_root / req_file_safe).exists():
              return Response(f"File requisiti non trovato: {req_file_safe}", status=404)
         if not (project_root / prompt_file_safe).exists():
@@ -148,55 +201,32 @@ def api_generate_tests():
         
         python_exe = sys.executable
         generator_script = str(project_root / 'tests' / 'test_generator.py')
-        cmd = [
-            python_exe, 
-            generator_script, 
-            '--req-file', req_file_safe, 
-            '--prompt-file', prompt_file_safe
-        ]
+        cmd = [python_exe, generator_script, '--req-file', req_file_safe, '--prompt-file', prompt_file_safe]
         
         print(f"🤖 Avvio subprocess TestGenerator: {' '.join(cmd)}")
-
         def generate_output():
             global generation_process
             try:
                 generation_process = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT, # Unisci stdout e stderr per i log
-                    text=True,
-                    encoding='utf-8',
-                    bufsize=1,
-                    cwd=project_root
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    text=True, encoding='utf-8', bufsize=1, cwd=project_root
                 )
-                
                 yield "--- 🚀 Avvio generazione... (L'output JSON apparirà alla fine) ---\n\n"
-                
                 for line in iter(generation_process.stdout.readline, ''):
-                    yield line
-                    time.sleep(0.01)
-                
+                    yield line; time.sleep(0.01)
                 generation_process.stdout.close()
                 return_code = generation_process.wait()
-                if return_code == 0:
-                    yield f"\n\n--- ✅ Generazione terminata ---"
-                else:
-                    yield f"\n\n--- ❌ Generazione fallita (Codice: {return_code}) ---"
-                    
-            except Exception as e:
-                yield f"\n\n--- ❌ ERRORE: Impossibile avviare il processo: {e} ---"
-            finally:
-                generation_process = None
-
+                if return_code == 0: yield f"\n\n--- ✅ Generazione terminata ---"
+                else: yield f"\n\n--- ❌ Generazione fallita (Codice: {return_code}) ---"
+            except Exception as e: yield f"\n\n--- ❌ ERRORE: Impossibile avviare il processo: {e} ---"
+            finally: generation_process = None
         return Response(stream_with_context(generate_output()), mimetype='text/plain')
-
     except Exception as e:
         print(f"❌ Errore avvio generazione: {e}", file=sys.stderr)
         return Response(f"Errore interno: {e}", status=500)
 
 @app.route('/api/stop-generation', methods=['POST'])
 def stop_generation():
-    """Termina il processo di generazione test in esecuzione."""
     global generation_process
     if generation_process and generation_process.poll() is None:
         try:
@@ -214,7 +244,6 @@ def stop_generation():
 
 @app.route('/api/upload-excel', methods=['POST'])
 def upload_excel():
-    """Salva un file Excel caricato nella cartella locale del progetto."""
     if 'file' not in request.files: return jsonify({"error": "Nessun file inviato"}), 400
     file = request.files['file']
     if file.filename == '': return jsonify({"error": "File non selezionato"}), 400
@@ -229,7 +258,6 @@ def upload_excel():
 
 @app.route('/api/reports', methods=['GET'])
 def get_reports_list():
-    """Elenca i report locali."""
     report_list = []
     if not REPORTS_DIR.exists(): return jsonify([])
     for dir_path in REPORTS_DIR.iterdir():
@@ -239,25 +267,21 @@ def get_reports_list():
                 relative_path = report_files[0].relative_to(REPORTS_DIR).as_posix()
                 report_list.append({"name": dir_path.name, "path": relative_path})
     report_list.sort(key=lambda x: x['name'], reverse=True); return jsonify(report_list)
-
 @app.route('/api/reports/<folder_name>', methods=['DELETE'])
 def delete_report_folder(folder_name):
-    """Elimina una cartella specifica all'interno di REPORTS_DIR."""
     try:
         safe_folder_name = secure_filename(folder_name)
         if not safe_folder_name or safe_folder_name != folder_name: abort(400, "Nome cartella non valido.")
         folder_path = (REPORTS_DIR / safe_folder_name).resolve()
         if not folder_path.is_dir() or folder_path.parent != REPORTS_DIR.resolve():
-            abort(404, "Cartella report non trovata o accesso non consentito.")
+            abort(404, "Cartella report non trovata.")
         shutil.rmtree(folder_path)
         print(f"✅ Cartella report eliminata: {safe_folder_name}")
         return jsonify({"success": True, "message": f"Report '{safe_folder_name}' eliminato."})
     except FileNotFoundError: abort(404, "Cartella report non trovata.")
     except Exception as e: return jsonify({"error": str(e)}), 500
-
 @app.route('/api/tests', methods=['GET'])
 def get_tests():
-    """Legge un file Excel locale e gestisce errori di colonna."""
     filename = request.args.get('file', 'dati_test.xlsx')
     file_path = get_excel_file_path(filename)
     check_excel_file(file_path)
@@ -282,10 +306,8 @@ def get_tests():
     except Exception as e:
         error_message = f"Errore lettura file '{filename}': {e}"
         print(f"❌ {error_message}"); return jsonify({"error": error_message}), 500
-
 @app.route('/api/tests', methods=['POST'])
 def save_tests():
-    """Salva un file Excel localmente."""
     filename = request.args.get('file', 'dati_test.xlsx')
     file_path = get_excel_file_path(filename)
     try:
@@ -296,8 +318,6 @@ def save_tests():
         return jsonify({"success": True})
     except Exception as e:
         print(f"❌ Errore salvataggio file locale: {e}"); return jsonify({"error": str(e)}), 500
-
-# --- API ESECUZIONE E STOP (invariate) ---
 @app.route('/api/test-status', methods=['GET'])
 def get_test_status():
     global test_process
@@ -307,12 +327,20 @@ def get_test_status():
 def run_tests():
     global test_process
     if test_process and test_process.poll() is None: return Response("Un processo di test è già in esecuzione.", status=409)
-    filename = request.args.get('file', 'dati_test.xlsx')
+    
+    # NOTA: Ora che la config è dinamica,
+    # i subprocess (main_runner, test_generator) leggeranno
+    # automaticamente il file .env aggiornato quando partono.
+    # Non serve più passare --llm come argomento.
+    
+    filename = request.args.get('file', 'dati_test.xlsx') 
+    
     file_path = get_excel_file_path(filename)
     if not file_path.exists(): return Response(f"File locale {filename} non trovato.", status=404)
     python_exe = sys.executable
     main_runner_script = str(project_root / 'main_runner.py')
     cmd = [python_exe, main_runner_script, '--file', file_path.name]
+    
     def generate_output():
         global test_process
         try:
@@ -320,7 +348,7 @@ def run_tests():
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 text=True, encoding='utf-8', bufsize=1, cwd=project_root
             )
-            yield "--- 🚀 Avvio dei test (usando file locale)... ---\n\n"
+            yield "--- 🚀 Avvio dei test (usando config da .env)... ---\n\n"
             for line in iter(test_process.stdout.readline, ''):
                 yield line; time.sleep(0.01)
             test_process.stdout.close()
@@ -356,12 +384,14 @@ def add_cache_busting_headers(response):
 
 # --- Avvio del Server ---
 def open_browser():
-    # Ora apre la nuova Home Page
     def _open(): webbrowser.open_new("http://127.0.0.1:5000/")
     t = threading.Timer(1.0, _open); t.daemon = True; t.start()
 
 if __name__ == '__main__':
     Path('templates').mkdir(exist_ok=True)
+    if not (project_root / 'llm_models.json').exists():
+        print("ATTENZIONE: File 'llm_models.json' mancante. Creane uno per la pagina di configurazione.")
+        
     print(f"\n🚀 Avvio Test Editor su http://127.0.0.1:5000")
     print("   Premi CTRL+C per fermare il server.")
     open_browser()
