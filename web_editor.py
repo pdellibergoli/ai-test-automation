@@ -157,6 +157,21 @@ def get_excel_files():
     files = [f.name for f in project_root.glob('*.xlsx') if not f.name.startswith('~$')]
     files.sort(); return jsonify(files)
 
+@app.route('/api/excel-sheets', methods=['GET'])
+def get_excel_sheets():
+    filename = request.args.get('file', 'dati_test.xlsx')
+    file_path = get_excel_file_path(filename)
+    
+    if not file_path.exists():
+        return jsonify({"error": "File non trovato"}), 404
+        
+    try:
+        # ExcelFile permette di ispezionare il file senza caricarne i dati
+        xl = pd.ExcelFile(file_path)
+        return jsonify(xl.sheet_names)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/input-files', methods=['GET'])
 def get_input_files():
     files = []
@@ -283,23 +298,44 @@ def delete_report_folder(folder_name):
 @app.route('/api/tests', methods=['GET'])
 def get_tests():
     filename = request.args.get('file', 'dati_test.xlsx')
+    requested_sheet = request.args.get('sheet', '').strip()
+    
     file_path = get_excel_file_path(filename)
     check_excel_file(file_path)
     try:
-        df = pd.read_excel(file_path, sheet_name=SHEET_NAME).fillna('')
-        missing_cols = [col for col in ALL_COLUMNS if col not in df.columns]
-        if missing_cols:
-            error_message = f"Colonne mancanti in '{filename}': {', '.join(missing_cols)}."
-            print(f"❌ {error_message}"); return jsonify({"error": error_message}), 400
-        current_columns_ordered = [col for col in ALL_COLUMNS if col in df.columns]
+        xl = pd.ExcelFile(file_path)
+        sheet_names = xl.sheet_names
+        sheet_to_load = requested_sheet if requested_sheet else sheet_names[0]
+        
+        df = pd.read_excel(file_path, sheet_name=sheet_to_load).fillna('')
+        
+        is_first_sheet = (sheet_to_load == sheet_names[0])
+        
         extra_cols = [col for col in df.columns if col not in ALL_COLUMNS]
-        df = df[current_columns_ordered + extra_cols]
-        df['Active'] = df['Active'].apply(lambda x: str(x).lower() in ['true', '1', 'yes', 'si', 'vero'])
+        
+        if is_first_sheet:
+            missing_cols = [col for col in ALL_COLUMNS if col not in df.columns]
+            if missing_cols:
+                return jsonify({
+                    "error": f"Il primo foglio deve contenere le colonne standard: {', '.join(missing_cols)}"
+                }), 400
+        
         for col in ALL_COLUMNS:
-             if col not in df.columns: df[col] = ''
-        df_display = df[ALL_COLUMNS]
-        tests = df_display.to_dict('records')
-        return jsonify(tests)
+            if col not in df.columns:
+                df[col] = ''
+
+        final_column_order = ALL_COLUMNS + extra_cols
+        df_display = df[final_column_order]
+
+        if 'Active' in df_display.columns:
+            df_display['Active'] = df_display['Active'].apply(
+                lambda x: str(x).lower() in ['true', '1', 'yes', 'si', 'vero']
+            )
+        
+        return jsonify({
+            "columns": final_column_order,
+            "data": df_display.to_dict('records')
+        })
     except pd.errors.EmptyDataError:
         error_message = f"Il file '{filename}' è vuoto o non valido."
         print(f"❌ {error_message}"); return jsonify({"error": error_message}), 400
@@ -309,13 +345,16 @@ def get_tests():
 @app.route('/api/tests', methods=['POST'])
 def save_tests():
     filename = request.args.get('file', 'dati_test.xlsx')
+    target_sheet = request.args.get('sheet', 'Foglio1').strip()
     file_path = get_excel_file_path(filename)
     try:
         data = request.json
-        df = pd.DataFrame(data, columns=ALL_COLUMNS) if data else pd.DataFrame(columns=ALL_COLUMNS)
-        df.to_excel(file_path, sheet_name=SHEET_NAME, index=False)
-        print(f"✅ File {file_path.name} salvato localmente.")
-        return jsonify({"success": True})
+        new_df = pd.DataFrame(data) 
+        
+        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+            new_df.to_excel(writer, sheet_name=target_sheet, index=False)
+            
+        return jsonify({"success": True, "message": f"Foglio '{target_sheet}' salvato."})
     except Exception as e:
         print(f"❌ Errore salvataggio file locale: {e}"); return jsonify({"error": str(e)}), 500
 @app.route('/api/test-status', methods=['GET'])
